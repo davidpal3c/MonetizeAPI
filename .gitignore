@@ -1,4 +1,8 @@
-./DS_STORE 
+.DS_Store
+node_modules/
+../_workspace/
 _workspace/
-_workspace
 
+dist/
+docs/
+docs/implementation-notes.md

@@ -1,0 +1,21 @@
+{
+  "name": "company-risk-score",
+  "description": "Returns risk score, sanctions flags, ESG notes, supplier notes for a company risk assessment.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "companyName": {
+        "type": "string",
+        "description": "companyName input for /company-risk-score"
+      },
+      "domain": {
+        "type": "string",
+        "description": "domain input for /company-risk-score"
+      }
+    },
+    "required": [
+      "companyName",
+      "domain"
+    ]
+  }
+}

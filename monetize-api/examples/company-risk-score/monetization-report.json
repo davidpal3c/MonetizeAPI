@@ -1,0 +1,176 @@
+{
+  "reportId": "report-company-risk-score-fixture-v1",
+  "generatedAt": "2026-05-16T00:00:00.000Z",
+  "fixtureMode": true,
+  "endpoint": {
+    "method": "POST",
+    "path": "/company-risk-score",
+    "inputFields": [
+      "companyName",
+      "domain"
+    ],
+    "outputFields": [
+      "risk score",
+      "sanctions flags",
+      "ESG notes",
+      "supplier notes"
+    ],
+    "targetUsers": "procurement teams and AI research agents",
+    "estimatedCostPerCallUsd": 0.04,
+    "expectedUsage": "low-frequency, high-value, machine-callable endpoint",
+    "domain": "data_api",
+    "sourceFixture": "examples/company-risk-score/input.txt"
+  },
+  "summary": "POST /company-risk-score is a data_api endpoint for procurement teams and AI research agents. Fixture mode recommends per-call pricing with hybrid x402/API access for low-frequency, high-value agent calls.",
+  "readinessScore": 82,
+  "pricing": {
+    "model": "per_call",
+    "suggestedPricePerCallUsd": 0.12,
+    "estimatedMarginPercent": 67,
+    "rationale": "Low-frequency, high-value usage supports per-call pricing with roughly 3x cost coverage.",
+    "currency": "USD"
+  },
+  "quota": {
+    "tier": "starter",
+    "requestsPerDay": 500,
+    "burstLimit": 20,
+    "rationale": "Low-frequency procurement and agent research traffic fits a conservative starter quota."
+  },
+  "accessModel": {
+    "primary": "hybrid",
+    "secondary": [
+      "api_key",
+      "x402"
+    ],
+    "agentReady": true,
+    "humanReady": true,
+    "rationale": "Machine-callable risk lookups benefit from x402 for agents and API keys for human workflows."
+  },
+  "x402Suitability": {
+    "score": 88,
+    "level": "high",
+    "machineCallable": true,
+    "idempotent": true,
+    "rationale": "Structured inputs, deterministic JSON-style outputs, and low-frequency agent usage are strong x402 candidates.",
+    "blockers": [
+      "Live settlement remains deferred in fixture mode."
+    ]
+  },
+  "abuseCostRisks": [
+    "Bulk enrichment on free tiers could inflate upstream data costs.",
+    "Domain/name typos may trigger repeated paid retries without validation.",
+    "High-cardinality lookups can be abused for passive reconnaissance."
+  ],
+  "ceibaPolicy": {
+    "version": "0.1",
+    "endpointId": "company-risk-score",
+    "access": {
+      "modes": [
+        "api_key",
+        "x402"
+      ],
+      "defaultMode": "x402"
+    },
+    "pricing": {
+      "model": "per_call",
+      "pricePerCallUsd": 0.12,
+      "currency": "USD"
+    },
+    "quotas": {
+      "requestsPerDay": 500,
+      "burstLimit": 20
+    },
+    "enforcement": {
+      "runtime": "ceiba-runtime-deferred",
+      "controlPlane": "ceiba-control-plane-deferred"
+    }
+  },
+  "mcpTool": {
+    "name": "company-risk-score",
+    "description": "Returns risk score, sanctions flags, ESG notes, supplier notes for a company risk assessment.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string",
+          "description": "companyName input for /company-risk-score"
+        },
+        "domain": {
+          "type": "string",
+          "description": "domain input for /company-risk-score"
+        }
+      },
+      "required": [
+        "companyName",
+        "domain"
+      ]
+    }
+  },
+  "x402Payment": {
+    "protocol": "x402",
+    "mode": "simulated",
+    "pricePerCallUsd": 0.12,
+    "currency": "USD",
+    "settlement": "deferred",
+    "resource": "/company-risk-score",
+    "headers": {
+      "X-Payment-Mode": "simulated"
+    }
+  },
+  "docs": {
+    "title": "Company Risk Score API",
+    "summary": "Look up a company risk score, sanctions flags, ESG notes, and supplier notes from company name and domain.",
+    "exampleRequest": "POST /company-risk-score\n{\n  \"companyName\": \"Acme Corp\",\n  \"domain\": \"acme.example\"\n}",
+    "exampleResponse": "{\n  \"riskScore\": 42,\n  \"sanctionsFlags\": [],\n  \"esgNotes\": \"...\",\n  \"supplierNotes\": \"...\"\n}",
+    "markdown": "# Company Risk Score\n\nCall `POST /company-risk-score` with `companyName` and `domain`.\n\nReturns risk score, sanctions flags, ESG notes, and supplier notes."
+  },
+  "launchChecklist": {
+    "title": "Company Risk Score launch checklist",
+    "items": [
+      {
+        "id": "validate-schema",
+        "label": "Validate MonetizationReport against schemas",
+        "status": "done"
+      },
+      {
+        "id": "publish-mcp-tool",
+        "label": "Publish MCP tool definition to agent clients",
+        "status": "todo"
+      },
+      {
+        "id": "configure-x402",
+        "label": "Attach simulated x402 payment metadata",
+        "status": "in_progress"
+      },
+      {
+        "id": "draft-ceiba-policy",
+        "label": "Review Ceiba policy draft with enforcement deferred",
+        "status": "todo"
+      }
+    ]
+  },
+  "simulatedPaidCall": {
+    "callId": "sim-call-company-risk-score-001",
+    "endpoint": "/company-risk-score",
+    "method": "POST",
+    "status": "settled_simulated",
+    "priceChargedUsd": 0.12,
+    "currency": "USD",
+    "payerType": "agent",
+    "settlementMode": "simulated",
+    "requestPayload": {
+      "companyName": "Acme Corp",
+      "domain": "acme.example"
+    },
+    "responseSummary": "Simulated paid call returned risk score 42 with no sanctions flags."
+  },
+  "usageEvent": {
+    "eventId": "usage-company-risk-score-001",
+    "timestamp": "2026-05-16T00:00:00.000Z",
+    "endpoint": "/company-risk-score",
+    "callerType": "agent",
+    "units": 1,
+    "costUsd": 0.04,
+    "outcome": "success"
+  }
+}
