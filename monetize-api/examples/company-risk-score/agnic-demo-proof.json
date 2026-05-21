@@ -1,6 +1,6 @@
 {
   "status": "skipped",
-  "generatedAt": "2026-05-21T04:39:50.387Z",
+  "generatedAt": "2026-05-21T05:43:46.727Z",
   "reason": "Skipped Agnic demo proof. Missing env: AGNIC_ACCESS_TOKEN, AGNIC_PARTNER_ID",
   "env": {
     "baseUrl": "https://api.agnic.ai/v1",
