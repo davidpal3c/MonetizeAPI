@@ -21,3 +21,10 @@ export {
   writeArtifactsToDirectory,
   type ArtifactFileMap,
 } from "./artifacts/write-artifacts.js";
+export { generatePaidCallSimulation } from "./simulator/generate-paid-call-simulation.js";
+export { renderPaidCallSimulationJson } from "./simulator/render-paid-call-simulation-json.js";
+export { renderPaidCallSimulationMd } from "./simulator/render-paid-call-simulation-md.js";
+export {
+  writePaidCallSimulationToDirectory,
+  type PaidCallSimulationFiles,
+} from "./simulator/write-paid-call-simulation.js";

@@ -46,3 +46,9 @@ export {
   type SimulatedPaidCall,
 } from "./simulated-paid-call.js";
 export { UsageEventSchema, type UsageEvent } from "./usage-event.js";
+export {
+  PaidCallSimulationSchema,
+  PaidCallSimulationStepSchema,
+  type PaidCallSimulation,
+  type PaidCallSimulationStep,
+} from "./paid-call-simulation.js";

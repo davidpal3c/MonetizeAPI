@@ -49,4 +49,4 @@ MonetizeAPI / Ceiba Launchpad is the productization and onboarding layer. Ceiba 
 
 ## Agnic hackathon path
 
-MonetizeAPI is accepted into the Agnic hackathon under Track: Monetize Your AI App. Agnic may be used where practical for OAuth, model calls, `X-Partner-Id`, checkout/top-up, balance, and earnings proof. Agnic is an adapter, not the product core. Fixture mode remains mandatory.
+MonetizeAPI is accepted into the Agnic hackathon under Track: Monetize Your AI App. The hackathon demo path uses live Agnic credentials and services through an adapter, starting with model calls and `X-Partner-Id`. OAuth, checkout/top-up, balance, and earnings proof follow in later slices. Agnic is an adapter, not the product core. Fixture mode remains mandatory as the local safety fallback when live credentials or services are unavailable.
