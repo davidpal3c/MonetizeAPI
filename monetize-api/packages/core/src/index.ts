@@ -28,6 +28,12 @@ export {
   writePaidCallSimulationToDirectory,
   type PaidCallSimulationFiles,
 } from "./simulator/write-paid-call-simulation.js";
+export {
+  buildAgnicAuthorizeUrl,
+  exchangeAgnicAuthorizationCode,
+  resolveCallbackRedirectUri,
+  type AgnicTokenResponse,
+} from "./agnic/oauth.js";
 export { loadAgnicConfigFromEnv, type AgnicConfig, type AgnicCredentialCheck } from "./agnic/config.js";
 export { callAgnicChatCompletion } from "./agnic/adapter.js";
 export { runAgnicDemoProof } from "./agnic/demo-proof.js";
