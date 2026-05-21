@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "generate:fixture": "node --import tsx ./src/cli/generate-fixture.ts"
+    "generate:fixture": "node --import tsx ./src/cli/generate-fixture.ts",
+    "agnic:demo-proof": "node --import tsx ./src/cli/agnic-demo-proof.ts"
   },
   "dependencies": {
     "@monetize-api/schemas": "workspace:*",

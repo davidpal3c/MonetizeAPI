@@ -5,7 +5,8 @@
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "generate:fixture": "pnpm --filter @monetize-api/core run generate:fixture"
+    "generate:fixture": "pnpm --filter @monetize-api/core run generate:fixture",
+    "agnic:demo-proof": "pnpm --filter @monetize-api/core run agnic:demo-proof"
   },
   "engines": {
     "node": ">=20"

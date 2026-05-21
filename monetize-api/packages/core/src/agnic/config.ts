@@ -1,0 +1,46 @@
+export type AgnicConfig = {
+  baseUrl: string;
+  partnerId: string;
+  accessToken: string;
+  model: string;
+};
+
+export type AgnicCredentialCheck = {
+  ready: boolean;
+  missing: string[];
+  config?: AgnicConfig;
+};
+
+const DEFAULT_BASE_URL = "https://api.agnic.ai/v1";
+const DEFAULT_MODEL = "gpt-4o-mini";
+
+export function loadAgnicConfigFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): AgnicCredentialCheck {
+  const missing: string[] = [];
+
+  const accessToken = env.AGNIC_ACCESS_TOKEN?.trim();
+  const partnerId = env.AGNIC_PARTNER_ID?.trim();
+
+  if (!accessToken) {
+    missing.push("AGNIC_ACCESS_TOKEN");
+  }
+  if (!partnerId) {
+    missing.push("AGNIC_PARTNER_ID");
+  }
+
+  if (missing.length > 0) {
+    return { ready: false, missing };
+  }
+
+  return {
+    ready: true,
+    missing: [],
+    config: {
+      baseUrl: (env.AGNIC_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
+      partnerId: partnerId!,
+      accessToken: accessToken!,
+      model: env.AGNIC_MODEL?.trim() || DEFAULT_MODEL,
+    },
+  };
+}

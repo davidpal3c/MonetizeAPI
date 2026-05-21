@@ -28,3 +28,7 @@ export {
   writePaidCallSimulationToDirectory,
   type PaidCallSimulationFiles,
 } from "./simulator/write-paid-call-simulation.js";
+export { loadAgnicConfigFromEnv, type AgnicConfig, type AgnicCredentialCheck } from "./agnic/config.js";
+export { callAgnicChatCompletion } from "./agnic/adapter.js";
+export { runAgnicDemoProof } from "./agnic/demo-proof.js";
+export type { AgnicDemoProof, AgnicDemoProofStatus } from "./agnic/types.js";
