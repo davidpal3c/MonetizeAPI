@@ -3,6 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runAgnicDemoProof } from "../agnic/demo-proof.js";
+import { loadWebEnvLocal } from "../resolve-web-env-path.js";
+
+loadWebEnvLocal();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.resolve(

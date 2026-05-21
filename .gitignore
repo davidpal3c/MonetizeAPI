@@ -11,6 +11,5 @@ docs/implementation-notes.md
 .env
 .env.*
 !.env.example
-monetize-api/.env
 monetize-api/apps/web/.env.local
 monetize-api/apps/web/.next/
