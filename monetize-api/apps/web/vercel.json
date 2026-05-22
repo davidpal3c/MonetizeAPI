@@ -1,5 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "cd ../.. && pnpm install && pnpm --filter @monetize-api/web build",
-  "installCommand": "cd ../.. && pnpm install"
-}
