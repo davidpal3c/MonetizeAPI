@@ -3,6 +3,10 @@ import { loadAgnicConfigFromEnv } from "./config.js";
 import { callAgnicChatCompletion } from "./adapter.js";
 import type { AgnicDemoProof } from "./types.js";
 
+/** Stable timestamp for skipped proofs so CLI runs do not churn the example file. */
+export const SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT =
+  "2026-05-16T00:00:00.000Z";
+
 const DEMO_PROMPT =
   "In one sentence, explain why a company-risk-score API should use per-call pricing for procurement agents.";
 
@@ -18,9 +22,14 @@ function baseProofFields(
   reason: string,
   config?: AgnicConfig,
 ): AgnicDemoProof {
+  const generatedAt =
+    status === "skipped"
+      ? SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT
+      : new Date().toISOString();
+
   return {
     status,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     reason,
     env: {
       baseUrl: config?.baseUrl ?? process.env.AGNIC_BASE_URL ?? "https://api.agnic.ai/v1",

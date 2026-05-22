@@ -29,11 +29,16 @@ export {
   type PaidCallSimulationFiles,
 } from "./simulator/write-paid-call-simulation.js";
 export {
+  AGNIC_OAUTH_STATE_COOKIE,
+  AGNIC_OAUTH_STATE_MAX_AGE,
   buildAgnicAuthorizeUrl,
   exchangeAgnicAuthorizationCode,
+  generateAgnicOAuthState,
+  resolveAgnicOAuthScopes,
   resolveCallbackRedirectUri,
   type AgnicTokenResponse,
 } from "./agnic/oauth.js";
+export { SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT } from "./agnic/demo-proof.js";
 export { loadAgnicConfigFromEnv, type AgnicConfig, type AgnicCredentialCheck } from "./agnic/config.js";
 export { callAgnicChatCompletion } from "./agnic/adapter.js";
 export { runAgnicDemoProof } from "./agnic/demo-proof.js";

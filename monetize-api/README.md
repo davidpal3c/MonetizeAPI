@@ -2,51 +2,44 @@
 
 From endpoint to paid agent-ready tool.
 
-MonetizeAPI turns endpoint/spec input into a structured monetization report, pricing/quota recommendation, x402 suitability score, MCP tool schema, Ceiba-ready policy config, docs snippet, launch checklist, and paid-call simulator.
+MonetizeAPI turns endpoint or API spec input into a structured monetization report and launch-ready artifacts: pricing guidance, x402 suitability, MCP tool schema, policy config, docs, checklist, and a paid-call simulator.
 
-## Required flow
+## Demo flow
 
 ```txt
 endpoint/spec input
--> structured monetization report
--> pricing/quota recommendation
--> x402 suitability score
--> MCP tool schema
--> Ceiba-ready policy config
--> docs snippet
--> launch checklist
--> paid-call simulator
+-> monetization report
+-> launch artifacts (policy, MCP, x402, docs, checklist)
+-> paid-call simulation
 ```
 
-## Required artifacts
+## Try it locally (no API keys required)
+
+From this directory:
+
+```bash
+npx pnpm@9.15.9 install
+npx pnpm@9.15.9 build
+npx pnpm@9.15.9 generate:fixture
+```
+
+Outputs are written to `examples/company-risk-score/`. The canonical input fixture is `examples/company-risk-score/input.txt`.
+
+Optional: `npx pnpm@9.15.9 dev:web` starts the web app on port 3000 for the Agnic sign-in demo.
+
+## Live demo
+
+**https://monetize-api-six.vercel.app**
+
+## Agnic hackathon
+
+Built for **Agnic — Track: Monetize Your AI App**. Agnic powers OAuth sign-in and live model calls; the product contracts and report pipeline are provider-independent. Fixture mode always works without live credentials.
+
+## Repository layout
 
 ```txt
-monetization-report.md
-ceiba-policy.json
-mcp-tool.json
-x402-payment.json
-docs.md
-launch-checklist.md
+packages/schemas   — validation contracts
+packages/core      — report generation, artifacts, simulator
+apps/web           — minimal OAuth demo UI
+examples/company-risk-score/
 ```
-
-## Canonical fixture
-
-```txt
-examples/company-risk-score/input.txt
-```
-
-## First implementation slice
-
-```txt
-feat/monetizeapi-core-schemas-and-fixture-demo
-```
-
-This slice should define schemas and generate a validated fixture-first monetization report. It should not require Agnic, live x402 settlement, MCP runtime, Ceiba enforcement, marketplace, saved reports, or paid exports.
-
-## Ceiba relationship
-
-MonetizeAPI / Ceiba Launchpad is the productization and onboarding layer. Ceiba Runtime, Ceiba Control Plane, Ceiba SDKs, Ceiba x402 Provider, and Ceiba Guard are future enforcement, configuration, integration, payment, and governance layers.
-
-## Agnic hackathon path
-
-MonetizeAPI is accepted into the Agnic hackathon under Track: Monetize Your AI App. The hackathon demo path uses live Agnic credentials and services through an adapter, starting with model calls and `X-Partner-Id`. OAuth, checkout/top-up, balance, and earnings proof follow in later slices. Agnic is an adapter, not the product core. Fixture mode remains mandatory as the local safety fallback when live credentials or services are unavailable.
