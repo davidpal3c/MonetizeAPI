@@ -31,6 +31,8 @@ Optional: `npx pnpm@9.15.9 dev:web` starts the web app on port 3000 for the Agni
 
 **https://monetize-api-six.vercel.app**
 
+Vercel project settings (Root Directory, install/build commands): see [docs/vercel-deploy.md](docs/vercel-deploy.md).
+
 ## Agnic hackathon
 
 Built for **Agnic — Track: Monetize Your AI App**. Agnic powers OAuth sign-in and live model calls; the product contracts and report pipeline are provider-independent. Fixture mode always works without live credentials.
