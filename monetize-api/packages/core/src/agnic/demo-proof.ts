@@ -7,7 +7,7 @@ import type { AgnicDemoProof } from "./types.js";
 export const SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT =
   "2026-05-16T00:00:00.000Z";
 
-const DEMO_PROMPT =
+export const AGNIC_DEMO_PROOF_PROMPT =
   "In one sentence, explain why a company-risk-score API should use per-call pricing for procurement agents.";
 
 function preview(text: string, max = 240): string {
@@ -54,7 +54,7 @@ export async function runAgnicDemoProof(): Promise<AgnicDemoProof> {
   const endpoint = `${config.baseUrl}/chat/completions`;
 
   try {
-    const result = await callAgnicChatCompletion(config, DEMO_PROMPT);
+    const result = await callAgnicChatCompletion(config, AGNIC_DEMO_PROOF_PROMPT);
 
     return {
       ...baseProofFields("success", "Agnic model call succeeded.", config),
@@ -62,7 +62,7 @@ export async function runAgnicDemoProof(): Promise<AgnicDemoProof> {
         endpoint,
         method: "POST",
         headersSent: ["Authorization", "Content-Type", "X-Partner-Id"],
-        prompt: DEMO_PROMPT,
+        prompt: AGNIC_DEMO_PROOF_PROMPT,
       },
       response: {
         model: result.model,
@@ -87,7 +87,7 @@ export async function runAgnicDemoProof(): Promise<AgnicDemoProof> {
         endpoint,
         method: "POST",
         headersSent: ["Authorization", "Content-Type", "X-Partner-Id"],
-        prompt: DEMO_PROMPT,
+        prompt: AGNIC_DEMO_PROOF_PROMPT,
       },
       error: { message, httpStatus },
     };

@@ -42,7 +42,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       ) : null}
 
       {hasToken ? (
-        <p>Signed in with Agnic (access token stored in httpOnly cookie).</p>
+        <>
+          <p>Signed in with Agnic (access token stored in httpOnly cookie).</p>
+          <p>
+            <a href="/agnic/proof">Run Agnic model proof</a>
+          </p>
+        </>
       ) : (
         <p>Sign in with Agnic to obtain a user access token for model calls.</p>
       )}

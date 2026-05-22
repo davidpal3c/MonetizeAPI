@@ -39,7 +39,13 @@ export {
   type AgnicTokenResponse,
 } from "./agnic/oauth.js";
 export { SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT } from "./agnic/demo-proof.js";
-export { loadAgnicConfigFromEnv, type AgnicConfig, type AgnicCredentialCheck } from "./agnic/config.js";
+export {
+  buildAgnicConfigFromAccessToken,
+  loadAgnicConfigFromEnv,
+  type AgnicConfig,
+  type AgnicCredentialCheck,
+} from "./agnic/config.js";
+export { AGNIC_DEMO_PROOF_PROMPT } from "./agnic/demo-proof.js";
 export { callAgnicChatCompletion } from "./agnic/adapter.js";
 export { runAgnicDemoProof } from "./agnic/demo-proof.js";
 export type { AgnicDemoProof, AgnicDemoProofStatus } from "./agnic/types.js";

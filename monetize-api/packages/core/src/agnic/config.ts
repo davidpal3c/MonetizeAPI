@@ -44,3 +44,35 @@ export function loadAgnicConfigFromEnv(
     },
   };
 }
+
+/** Build config from OAuth cookie token + server env (web proof route). */
+export function buildAgnicConfigFromAccessToken(
+  accessToken: string,
+  env: NodeJS.ProcessEnv = process.env,
+): AgnicCredentialCheck {
+  const missing: string[] = [];
+  const token = accessToken.trim();
+  const partnerId = env.AGNIC_PARTNER_ID?.trim();
+
+  if (!token) {
+    missing.push("agnic_access_token");
+  }
+  if (!partnerId) {
+    missing.push("AGNIC_PARTNER_ID");
+  }
+
+  if (missing.length > 0) {
+    return { ready: false, missing };
+  }
+
+  return {
+    ready: true,
+    missing: [],
+    config: {
+      baseUrl: (env.AGNIC_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
+      partnerId: partnerId!,
+      accessToken: token,
+      model: env.AGNIC_MODEL?.trim() || DEFAULT_MODEL,
+    },
+  };
+}
