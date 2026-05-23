@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/link-next-in-web.mjs",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "generate:fixture": "pnpm --filter @monetize-api/core run generate:fixture",
