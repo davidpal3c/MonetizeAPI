@@ -12,7 +12,19 @@ export type AgnicCredentialCheck = {
 };
 
 const DEFAULT_BASE_URL = "https://api.agnic.ai/v1";
-const DEFAULT_MODEL = "gpt-4o-mini";
+const DEFAULT_MODEL = "openai/gpt-4o-mini";
+
+/** Agnic requires "author/model" (e.g. openai/gpt-4o-mini). */
+export function normalizeAgnicModel(raw: string): string {
+  const model = raw.trim();
+  if (!model) {
+    return DEFAULT_MODEL;
+  }
+  if (model.includes("/")) {
+    return model;
+  }
+  return `openai/${model}`;
+}
 
 export function loadAgnicConfigFromEnv(
   env: NodeJS.ProcessEnv = process.env,
@@ -40,7 +52,7 @@ export function loadAgnicConfigFromEnv(
       baseUrl: (env.AGNIC_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
       partnerId: partnerId!,
       accessToken: accessToken!,
-      model: env.AGNIC_MODEL?.trim() || DEFAULT_MODEL,
+      model: normalizeAgnicModel(env.AGNIC_MODEL ?? DEFAULT_MODEL),
     },
   };
 }
@@ -72,7 +84,7 @@ export function buildAgnicConfigFromAccessToken(
       baseUrl: (env.AGNIC_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
       partnerId: partnerId!,
       accessToken: token,
-      model: env.AGNIC_MODEL?.trim() || DEFAULT_MODEL,
+      model: normalizeAgnicModel(env.AGNIC_MODEL ?? DEFAULT_MODEL),
     },
   };
 }

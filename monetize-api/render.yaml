@@ -6,7 +6,7 @@
 #   AGNIC_CLIENT_SECRET
 #   AGNIC_PARTNER_ID
 #   AGNIC_REDIRECT_URI  → https://<your-service>.onrender.com/auth/callback
-# Optional: AGNIC_BASE_URL, AGNIC_MODEL, AGNIC_OAUTH_SCOPES
+# Optional: AGNIC_BASE_URL, AGNIC_MODEL=openai/gpt-4o-mini, AGNIC_OAUTH_SCOPES
 
 services:
   - type: web

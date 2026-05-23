@@ -1,5 +1,5 @@
 import type { AgnicConfig } from "./config.js";
-import { loadAgnicConfigFromEnv } from "./config.js";
+import { loadAgnicConfigFromEnv, normalizeAgnicModel } from "./config.js";
 import { callAgnicChatCompletion } from "./adapter.js";
 import type { AgnicDemoProof } from "./types.js";
 
@@ -33,7 +33,9 @@ function baseProofFields(
     reason,
     env: {
       baseUrl: config?.baseUrl ?? process.env.AGNIC_BASE_URL ?? "https://api.agnic.ai/v1",
-      model: config?.model ?? process.env.AGNIC_MODEL ?? "gpt-4o-mini",
+      model: normalizeAgnicModel(
+        config?.model ?? process.env.AGNIC_MODEL ?? "openai/gpt-4o-mini",
+      ),
       partnerIdSet: Boolean(process.env.AGNIC_PARTNER_ID?.trim()),
       accessTokenSet: Boolean(process.env.AGNIC_ACCESS_TOKEN?.trim()),
     },

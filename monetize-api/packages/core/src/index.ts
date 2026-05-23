@@ -44,6 +44,7 @@ export { SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT } from "./agnic/demo-proof.js";
 export {
   buildAgnicConfigFromAccessToken,
   loadAgnicConfigFromEnv,
+  normalizeAgnicModel,
   type AgnicConfig,
   type AgnicCredentialCheck,
 } from "./agnic/config.js";
