@@ -61,7 +61,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <code>localhost</code> or <code>127.0.0.1</code> on port 3000). In the
         Agnic client, add matching <strong>JavaScript origins</strong> and redirect
         URIs (e.g. <code>http://localhost:3000</code> locally,{" "}
-        <code>https://monetize-api-six.vercel.app</code> in production).
+        <code>https://monetizeapi.onrender.com</code> in production).
       </p>
     </main>
   );

@@ -10,11 +10,10 @@ RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/schemas/package.json ./packages/schemas/
 COPY packages/core/package.json ./packages/core/
 COPY apps/web/package.json ./apps/web/
-COPY scripts/materialize-web-deps.mjs ./scripts/
 RUN CI=true pnpm install --frozen-lockfile
 
 FROM base AS builder

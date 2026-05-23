@@ -29,9 +29,9 @@ Optional: `npx pnpm@9.15.9 dev:web` starts the web app on port 3000 for the Agni
 
 ## Live demo
 
-**https://monetize-api-six.vercel.app**
+**https://monetizeapi.onrender.com**
 
-Vercel project settings (Root Directory, install/build commands): see [docs/vercel-deploy.md](docs/vercel-deploy.md).
+Deployed via Docker on Render. See [`Dockerfile`](Dockerfile) and [`render.yaml`](render.yaml).
 
 ## Agnic hackathon
 

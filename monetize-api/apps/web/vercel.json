@@ -1,5 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && CI=true pnpm install && node scripts/materialize-web-deps.mjs",
-  "buildCommand": "cd ../.. && pnpm --filter @monetize-api/web... build"
-}
