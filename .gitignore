@@ -4,6 +4,7 @@ node_modules/
 _workspace/
 
 dist/
+*.tsbuildinfo
 docs/
 docs/implementation-notes.md
 
