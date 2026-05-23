@@ -2,7 +2,7 @@
 # https://render.com/docs/blueprint-spec
 #
 # Set these in the Render dashboard (or link as secrets):
-#   NEXT_PUBLIC_AGNIC_CLIENT_ID
+#   AGNIC_CLIENT_ID
 #   AGNIC_CLIENT_SECRET
 #   AGNIC_PARTNER_ID
 #   AGNIC_REDIRECT_URI  → https://<your-service>.onrender.com/auth/callback

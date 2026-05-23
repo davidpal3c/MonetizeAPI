@@ -18,7 +18,7 @@ function redirectWithError(origin: string, code: string, detail: string): NextRe
 }
 
 export async function GET(request: Request) {
-  const clientId = process.env.NEXT_PUBLIC_AGNIC_CLIENT_ID?.trim();
+  const clientId = process.env.AGNIC_CLIENT_ID?.trim();
   const clientSecret = process.env.AGNIC_CLIENT_SECRET?.trim();
 
   const url = new URL(request.url);

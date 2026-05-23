@@ -10,9 +10,9 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export function GET(request: Request) {
-  const clientId = process.env.NEXT_PUBLIC_AGNIC_CLIENT_ID?.trim();
+  const clientId = process.env.AGNIC_CLIENT_ID?.trim();
   if (!clientId) {
-    return new Response("Missing NEXT_PUBLIC_AGNIC_CLIENT_ID", { status: 500 });
+    return new Response("Missing AGNIC_CLIENT_ID", { status: 500 });
   }
 
   const origin = new URL(request.url).origin;
