@@ -1,0 +1,23 @@
+# Render Blueprint — Docker web service for Agnic OAuth + /agnic/proof
+# https://render.com/docs/blueprint-spec
+#
+# Set these in the Render dashboard (or link as secrets):
+#   NEXT_PUBLIC_AGNIC_CLIENT_ID
+#   AGNIC_CLIENT_SECRET
+#   AGNIC_PARTNER_ID
+#   AGNIC_REDIRECT_URI  → https://<your-service>.onrender.com/auth/callback
+# Optional: AGNIC_BASE_URL, AGNIC_MODEL, AGNIC_OAUTH_SCOPES
+
+services:
+  - type: web
+    name: monetizeapi-web-proof
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOSTNAME
+        value: 0.0.0.0
