@@ -81,3 +81,37 @@ export async function exchangeAgnicAuthorizationCode(params: {
 export function resolveCallbackRedirectUri(origin: string): string {
   return `${origin.replace(/\/$/, "")}/auth/callback`;
 }
+
+/** Public site origin (Render/proxy-safe). */
+export function resolvePublicOrigin(request: Request): string {
+  const fromEnv = process.env.AGNIC_REDIRECT_URI?.trim();
+  if (fromEnv) {
+    try {
+      return new URL(fromEnv).origin;
+    } catch {
+      // ignore invalid AGNIC_REDIRECT_URI
+    }
+  }
+
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  if (forwardedHost) {
+    const host = forwardedHost.split(",")[0]?.trim();
+    if (host) {
+      const proto =
+        request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
+        "https";
+      return `${proto}://${host}`;
+    }
+  }
+
+  return new URL(request.url).origin;
+}
+
+/** OAuth redirect_uri for authorize + token exchange (must match Agnic registration). */
+export function resolveOAuthRedirectUri(request: Request): string {
+  const fromEnv = process.env.AGNIC_REDIRECT_URI?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  return resolveCallbackRedirectUri(resolvePublicOrigin(request));
+}

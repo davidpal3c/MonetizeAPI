@@ -1,7 +1,8 @@
 import {
   AGNIC_OAUTH_STATE_COOKIE,
   exchangeAgnicAuthorizationCode,
-  resolveCallbackRedirectUri,
+  resolveOAuthRedirectUri,
+  resolvePublicOrigin,
 } from "@monetize-api/core";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
   const clientSecret = process.env.AGNIC_CLIENT_SECRET?.trim();
 
   const url = new URL(request.url);
-  const origin = url.origin;
+  const origin = resolvePublicOrigin(request);
 
   if (!clientId || !clientSecret) {
     return redirectWithError(
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const redirectUri = resolveCallbackRedirectUri(origin);
+  const redirectUri = resolveOAuthRedirectUri(request);
 
   try {
     const token = await exchangeAgnicAuthorizationCode({
@@ -76,14 +77,14 @@ export async function GET(request: Request) {
     const response = NextResponse.redirect(new URL("/", origin));
     response.cookies.set(TOKEN_COOKIE, token.access_token, {
       httpOnly: true,
-      secure: url.protocol === "https:",
+      secure: origin.startsWith("https:"),
       sameSite: "lax",
       path: "/",
       maxAge: token.expires_in ?? 60 * 60 * 24 * 7,
     });
     response.cookies.set(AGNIC_OAUTH_STATE_COOKIE, "", {
       httpOnly: true,
-      secure: url.protocol === "https:",
+      secure: origin.startsWith("https:"),
       sameSite: "lax",
       path: "/",
       maxAge: 0,

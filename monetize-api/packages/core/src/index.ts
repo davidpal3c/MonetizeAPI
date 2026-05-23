@@ -36,6 +36,8 @@ export {
   generateAgnicOAuthState,
   resolveAgnicOAuthScopes,
   resolveCallbackRedirectUri,
+  resolveOAuthRedirectUri,
+  resolvePublicOrigin,
   type AgnicTokenResponse,
 } from "./agnic/oauth.js";
 export { SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT } from "./agnic/demo-proof.js";
