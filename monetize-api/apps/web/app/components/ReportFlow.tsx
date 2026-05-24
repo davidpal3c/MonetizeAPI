@@ -19,11 +19,13 @@ type SessionResponse = {
   signedIn: boolean;
   clientId: string | null;
   partnerConfigured: boolean;
+  topupReturnUrl: string;
 };
 
 type BalanceResponse = {
   balance: number;
   currency?: string;
+  error?: string;
 };
 
 export function ReportFlow({
@@ -36,8 +38,11 @@ export function ReportFlow({
   const [input, setInput] = useState(initialInput || defaultInput);
   const [signedIn, setSignedIn] = useState(initialSignedIn);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [topupReturnUrl, setTopupReturnUrl] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const [currency, setCurrency] = useState("USD");
+  const [topupMessage, setTopupMessage] = useState<string | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,24 +63,28 @@ export function ReportFlow({
     const data = (await response.json()) as SessionResponse;
     setSignedIn(data.signedIn);
     setClientId(data.clientId);
+    setTopupReturnUrl(data.topupReturnUrl ?? null);
   }, []);
 
   const refreshBalance = useCallback(async () => {
     if (!signedIn) {
       setBalance(null);
+      setBalanceError(null);
       return;
     }
 
     setLoadingBalance(true);
     try {
       const response = await fetch("/api/agnic/balance", { cache: "no-store" });
+      const data = (await response.json()) as BalanceResponse;
       if (!response.ok) {
         setBalance(null);
+        setBalanceError(data.error ?? "Balance fetch failed");
         return;
       }
-      const data = (await response.json()) as BalanceResponse;
       setBalance(data.balance);
       setCurrency(data.currency ?? "USD");
+      setBalanceError(null);
     } finally {
       setLoadingBalance(false);
     }
@@ -94,6 +103,32 @@ export function ReportFlow({
       void fetch("/api/auth/preserve-input", { method: "DELETE" });
     }
   }, [restoredFromOAuth]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const topup = params.get("topup");
+    if (topup !== "success" && topup !== "cancelled") {
+      return;
+    }
+
+    if (topup === "success") {
+      setTopupMessage("Top-up successful — your balance is updated.");
+      void refreshBalance();
+    }
+
+    params.delete("topup");
+    params.delete("session_id");
+    const qs = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      window.location.pathname + (qs ? `?${qs}` : ""),
+    );
+  }, [refreshBalance]);
 
   const signInForReport = async () => {
     setError(null);
@@ -214,9 +249,11 @@ export function ReportFlow({
       ) : (
         <SignedInStatus
           balance={balance}
+          balanceError={balanceError}
           currency={currency}
           loadingBalance={loadingBalance}
           restoredFromOAuth={restoredFromOAuth}
+          topupMessage={topupMessage}
         />
       )}
 
@@ -260,6 +297,7 @@ export function ReportFlow({
         {signedIn ? (
           <AddFundsButton
             clientId={clientId}
+            topupReturnUrl={topupReturnUrl}
             balance={balance}
             currency={currency}
             onBalanceRefresh={() => void refreshBalance()}
@@ -360,29 +398,40 @@ function AuthErrorAlert({ title, detail }: { title: string; detail?: string }) {
 
 function SignedInStatus({
   balance,
+  balanceError,
   currency,
   loadingBalance,
   restoredFromOAuth,
+  topupMessage,
 }: {
   balance: number | null;
+  balanceError: string | null;
   currency: string;
   loadingBalance: boolean;
   restoredFromOAuth: boolean;
+  topupMessage: string | null;
 }) {
+  let balanceLabel: string;
+  if (loadingBalance) {
+    balanceLabel = "Loading…";
+  } else if (balance != null) {
+    balanceLabel = `$${balance.toFixed(2)} ${currency}`;
+  } else if (balanceError) {
+    balanceLabel = `Unavailable (${balanceError})`;
+  } else {
+    balanceLabel = "Unavailable";
+  }
+
   return (
     <div style={{ marginTop: "1rem" }}>
       <p style={{ color: "#1b5e20", fontWeight: 600 }}>
         Signed in with Agnic
         {restoredFromOAuth ? " — your input was restored after OAuth." : null}
       </p>
-      <p>
-        Balance:{" "}
-        {loadingBalance
-          ? "Loading…"
-          : balance != null
-            ? `$${balance.toFixed(2)} ${currency}`
-            : "Unavailable"}
-      </p>
+      <p>Balance: {balanceLabel}</p>
+      {topupMessage ? (
+        <p style={{ color: "#1b5e20", fontSize: "0.9rem" }}>{topupMessage}</p>
+      ) : null}
     </div>
   );
 }

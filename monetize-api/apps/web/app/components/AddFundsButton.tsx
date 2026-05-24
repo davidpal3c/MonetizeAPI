@@ -10,6 +10,7 @@ import {
 
 type AddFundsButtonProps = {
   clientId: string | null;
+  topupReturnUrl: string | null;
   balance?: number | null;
   currency?: string;
   onBalanceRefresh: () => void;
@@ -25,6 +26,7 @@ function formatBalance(balance: number | null | undefined, currency = "USD"): st
 
 export function AddFundsButton({
   clientId,
+  topupReturnUrl,
   balance,
   currency = "USD",
   onBalanceRefresh,
@@ -45,13 +47,13 @@ export function AddFundsButton({
   }, [onBalanceRefresh]);
 
   const openTopup = useCallback(() => {
-    if (!clientId) {
+    if (!clientId || !topupReturnUrl) {
       return;
     }
 
     const url = buildAgnicTopupUrl({
       clientId,
-      returnUrl: window.location.href,
+      returnUrl: topupReturnUrl,
     });
 
     if (window.innerWidth < 640) {
@@ -60,20 +62,29 @@ export function AddFundsButton({
     }
 
     window.open(url, "agnic-topup", "width=480,height=720,popup=yes");
-  }, [clientId]);
+  }, [clientId, topupReturnUrl]);
+
+  const isDisabled = disabled || !clientId || !topupReturnUrl;
 
   return (
     <button
       type="button"
       onClick={openTopup}
-      disabled={disabled || !clientId}
+      disabled={isDisabled}
+      title={
+        !topupReturnUrl
+          ? "Top-up return URL is not configured"
+          : !clientId
+            ? "Agnic client ID is not configured"
+            : undefined
+      }
       style={{
         padding: "0.5rem 1rem",
         borderRadius: "6px",
         border: "1px solid #1565c0",
         background: "#1976d2",
         color: "#fff",
-        cursor: disabled || !clientId ? "not-allowed" : "pointer",
+        cursor: isDisabled ? "not-allowed" : "pointer",
       }}
     >
       Add Funds {formatBalance(balance, currency)}

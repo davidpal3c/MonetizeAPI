@@ -1,4 +1,4 @@
-import { buildAgnicConfigFromAccessToken, fetchAgnicBalance } from "@monetize-api/core";
+import { fetchAgnicBalance } from "@monetize-api/core";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -8,18 +8,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get(TOKEN_COOKIE)?.value;
+  const accessToken = cookieStore.get(TOKEN_COOKIE)?.value?.trim();
 
   if (!accessToken) {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
-  }
-
-  const credentialCheck = buildAgnicConfigFromAccessToken(accessToken);
-  if (!credentialCheck.ready) {
-    return NextResponse.json(
-      { error: "missing_config", missing: credentialCheck.missing },
-      { status: 503 },
-    );
   }
 
   try {

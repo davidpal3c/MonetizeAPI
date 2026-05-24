@@ -115,3 +115,8 @@ export function resolveOAuthRedirectUri(request: Request): string {
   }
   return resolveCallbackRedirectUri(resolvePublicOrigin(request));
 }
+
+/** Top-up return_url must match the same registered OAuth redirect URIs. */
+export function resolveTopupReturnUrl(request: Request): string {
+  return resolveOAuthRedirectUri(request);
+}

@@ -50,8 +50,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <p style={{ fontSize: "0.875rem", color: "#444" }}>
         Register OAuth redirect URIs on your Agnic client (e.g.{" "}
-        <code>http://localhost:3000</code> locally,{" "}
-        <code>https://monetizeapi.onrender.com</code> in production).
+        <code>http://localhost:3000/auth/callback</code> locally,{" "}
+        <code>https://monetizeapi.onrender.com/auth/callback</code> in production).
+        Add Funds uses the same callback URL as top-up <code>return_url</code>.
       </p>
     </main>
   );

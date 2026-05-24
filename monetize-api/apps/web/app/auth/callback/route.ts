@@ -18,12 +18,30 @@ function redirectWithError(origin: string, code: string, detail: string): NextRe
   return NextResponse.redirect(home);
 }
 
+function redirectWithTopupResult(
+  origin: string,
+  topup: string,
+  sessionId: string | null,
+): NextResponse {
+  const home = new URL("/", origin);
+  home.searchParams.set("topup", topup);
+  if (sessionId) {
+    home.searchParams.set("session_id", sessionId);
+  }
+  return NextResponse.redirect(home);
+}
+
 export async function GET(request: Request) {
   const clientId = process.env.AGNIC_CLIENT_ID?.trim();
   const clientSecret = process.env.AGNIC_CLIENT_SECRET?.trim();
 
   const url = new URL(request.url);
   const origin = resolvePublicOrigin(request);
+
+  const topup = url.searchParams.get("topup");
+  if (topup === "success" || topup === "cancelled") {
+    return redirectWithTopupResult(origin, topup, url.searchParams.get("session_id"));
+  }
 
   if (!clientId || !clientSecret) {
     return redirectWithError(
