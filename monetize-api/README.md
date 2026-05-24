@@ -47,3 +47,7 @@ packages/core      — report generation, artifacts, simulator
 apps/web           — minimal OAuth demo UI
 examples/company-risk-score/
 ```
+
+## License
+
+This project is licensed under the [MIT License](../LICENSE). You may use, modify, and distribute the code with attribution; the copyright notice must remain in copies and derivative works.
