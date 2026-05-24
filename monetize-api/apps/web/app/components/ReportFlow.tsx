@@ -43,6 +43,7 @@ export function ReportFlow({
   const [error, setError] = useState<string | null>(null);
   const [needsFunds, setNeedsFunds] = useState(false);
   const [reportResult, setReportResult] = useState<PaidReportGenerationResult | null>(null);
+  const [parseFailed, setParseFailed] = useState(false);
 
   const restoredFromOAuth = useMemo(
     () => Boolean(initialInput && initialSignedIn),
@@ -104,9 +105,13 @@ export function ReportFlow({
     window.location.href = "/api/auth/sign-in";
   };
 
-  const generateReport = async (mode: "live" | "fixture") => {
+  const generateReport = async (
+    mode: "live" | "fixture",
+    options: { useCanonicalFixture?: boolean } = {},
+  ) => {
     setError(null);
     setNeedsFunds(false);
+    setParseFailed(false);
     setGenerating(true);
     setReportResult(null);
 
@@ -119,16 +124,29 @@ export function ReportFlow({
       const response = await fetch("/api/reports/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input, mode }),
+        body: JSON.stringify({
+          input,
+          mode,
+          useCanonicalFixture: options.useCanonicalFixture === true,
+        }),
       });
 
       const data = (await response.json()) as PaidReportGenerationResult & {
         error?: string;
         needsFunds?: boolean;
         message?: string;
+        parseFailed?: boolean;
       };
 
       if (!response.ok) {
+        if (data.parseFailed || data.error === "parse_failed") {
+          setParseFailed(true);
+          setError(
+            data.message ??
+              "We could not confidently parse this endpoint. Use the fixture demo instead?",
+          );
+          return;
+        }
         setError(data.message ?? data.error ?? "Report generation failed.");
         setNeedsFunds(Boolean(data.needsFunds));
         return;
@@ -219,6 +237,16 @@ export function ReportFlow({
         >
           Generate demo report (fixture)
         </button>
+        {parseFailed ? (
+          <button
+            type="button"
+            onClick={() => void generateReport("fixture", { useCanonicalFixture: true })}
+            disabled={generating}
+            style={secondaryButtonStyle}
+          >
+            Use canonical fixture demo
+          </button>
+        ) : null}
         {!signedIn ? (
           <button
             type="button"
@@ -260,9 +288,29 @@ export function ReportFlow({
           <p>
             Mode: <strong>{reportResult.package.mode}</strong>
             {reportResult.parseSource === "fixture_fallback"
-              ? " (used canonical fixture input)"
+              ? " (canonical company-risk-score fixture)"
               : null}
           </p>
+          <p style={{ fontSize: "0.875rem", color: "#444" }}>
+            Report ID: {reportResult.package.reportId}
+          </p>
+          {reportResult.package.files["monetization-report.json"] ? (
+            <p style={{ fontSize: "0.875rem", color: "#444" }}>
+              Endpoint:{" "}
+              {(() => {
+                try {
+                  const parsed = JSON.parse(
+                    reportResult.package.files["monetization-report.json"],
+                  ) as { endpoint?: { method?: string; path?: string } };
+                  return parsed.endpoint
+                    ? `${parsed.endpoint.method} ${parsed.endpoint.path}`
+                    : "—";
+                } catch {
+                  return "—";
+                }
+              })()}
+            </p>
+          ) : null}
           {reportResult.package.modelInsight ? (
             <p style={{ fontSize: "0.9rem" }}>
               <strong>Model insight:</strong> {reportResult.package.modelInsight}

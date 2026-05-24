@@ -1,7 +1,9 @@
 import {
   buildAgnicConfigFromAccessToken,
+  EndpointParseError,
   generateFixtureReportPackage,
   generatePaidReportPackage,
+  NarrativeEnhancementError,
 } from "@monetize-api/core";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -13,6 +15,7 @@ export const dynamic = "force-dynamic";
 type GenerateBody = {
   input?: string;
   mode?: "live" | "fixture";
+  useCanonicalFixture?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -25,12 +28,23 @@ export async function POST(request: Request) {
 
   const rawInput = typeof body.input === "string" ? body.input : "";
   const mode = body.mode === "fixture" ? "fixture" : "live";
+  const useCanonicalFixture = body.useCanonicalFixture === true;
 
   if (mode === "fixture") {
     try {
-      const result = await generateFixtureReportPackage(rawInput);
+      const result = await generateFixtureReportPackage(rawInput, { useCanonicalFixture });
       return NextResponse.json(result);
     } catch (err) {
+      if (err instanceof EndpointParseError) {
+        return NextResponse.json(
+          {
+            error: err.code,
+            message: err.message,
+            parseFailed: true,
+          },
+          { status: 400 },
+        );
+      }
       const message = err instanceof Error ? err.message : "Fixture report failed";
       return NextResponse.json({ error: message }, { status: 500 });
     }
@@ -65,15 +79,35 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(result);
   } catch (err) {
+    if (err instanceof EndpointParseError) {
+      return NextResponse.json(
+        {
+          error: err.code,
+          message: err.message,
+          parseFailed: true,
+        },
+        { status: 400 },
+      );
+    }
+
+    if (err instanceof NarrativeEnhancementError) {
+      return NextResponse.json(
+        {
+          error: err.code,
+          message: err.message,
+        },
+        { status: 502 },
+      );
+    }
+
     const message = err instanceof Error ? err.message : "Paid report generation failed";
     const httpStatus =
       err instanceof Error && "httpStatus" in err
         ? (err as Error & { httpStatus?: number }).httpStatus
         : 502;
 
-  const isBalanceError =
-      httpStatus === 402 ||
-      /balance|credit|insufficient|payment/i.test(message);
+    const isBalanceError =
+      httpStatus === 402 || /balance|credit|insufficient|payment/i.test(message);
 
     return NextResponse.json(
       {

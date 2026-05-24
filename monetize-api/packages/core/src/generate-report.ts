@@ -4,10 +4,11 @@ import { MonetizationReportSchema } from "@monetize-api/schemas";
 const FIXTURE_REPORT_ID = "report-company-risk-score-fixture-v1";
 const FIXTURE_GENERATED_AT = "2026-05-16T00:00:00.000Z";
 
+export type ReportGenerationMode = "fixture" | "live";
+
 export type GenerateReportOptions = {
-  reportId?: string;
+  mode?: ReportGenerationMode;
   generatedAt?: string;
-  summaryPrefix?: string;
 };
 
 function slugify(value: string): string {
@@ -15,6 +16,49 @@ function slugify(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function titleCaseSlug(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function buildEndpointTitle(endpoint: EndpointInput): string {
+  const slug = slugify(endpoint.path.replace(/^\//, ""));
+  return `${titleCaseSlug(slug)} API`;
+}
+
+function exampleValueForField(field: string): string {
+  const normalized = field.toLowerCase();
+  if (normalized.includes("domain")) {
+    return "example.com";
+  }
+  if (normalized.includes("email")) {
+    return "user@example.com";
+  }
+  if (normalized.includes("id")) {
+    return "item-123";
+  }
+  if (normalized.includes("name")) {
+    return "Example Corp";
+  }
+  return `sample-${slugify(field) || "value"}`;
+}
+
+function buildExampleRequestPayload(
+  endpoint: EndpointInput,
+): Record<string, string> {
+  return Object.fromEntries(
+    endpoint.inputFields.map((field) => [field, exampleValueForField(field)]),
+  );
+}
+
+function buildExampleResponse(endpoint: EndpointInput): string {
+  const fields = endpoint.outputFields.map((field) => `  "${field}": "..."`);
+  return `{\n${fields.join(",\n")}\n}`;
 }
 
 function buildMcpTool(endpoint: EndpointInput) {
@@ -28,9 +72,10 @@ function buildMcpTool(endpoint: EndpointInput) {
     ]),
   );
 
+  const outputs = endpoint.outputFields.join(", ");
   return {
     name: slugify(endpoint.path.replace(/^\//, "")),
-    description: `Returns ${endpoint.outputFields.join(", ")} for a company risk assessment.`,
+    description: `Calls ${endpoint.method} ${endpoint.path} and returns ${outputs}.`,
     inputSchema: {
       type: "object" as const,
       properties,
@@ -39,17 +84,41 @@ function buildMcpTool(endpoint: EndpointInput) {
   };
 }
 
+function defaultAbuseRisks(endpoint: EndpointInput): string[] {
+  return [
+    `High-cardinality ${endpoint.inputFields.join("/") || "input"} lookups can inflate upstream costs.`,
+    `Repeated retries on invalid ${endpoint.domain} requests may waste paid quota.`,
+    `Automated agents calling ${endpoint.path} without rate limits can spike spend.`,
+  ];
+}
+
+function buildReportId(endpoint: EndpointInput, mode: ReportGenerationMode): string {
+  const slug = slugify(endpoint.path.replace(/^\//, ""));
+  if (mode === "fixture" && slug === "company-risk-score") {
+    return FIXTURE_REPORT_ID;
+  }
+  if (mode === "fixture") {
+    return `report-${slug}-fixture-v1`;
+  }
+  return `report-${slug}-live-v1`;
+}
+
 export function generateMonetizationReport(
   endpoint: EndpointInput,
   options: GenerateReportOptions = {},
 ): MonetizationReport {
-  const generatedAt = options.generatedAt ?? FIXTURE_GENERATED_AT;
-  const reportId = options.reportId ?? FIXTURE_REPORT_ID;
+  const mode = options.mode ?? "fixture";
+  const generatedAt =
+    options.generatedAt ?? (mode === "fixture" ? FIXTURE_GENERATED_AT : new Date().toISOString());
+  const reportId = buildReportId(endpoint, mode);
+  const endpointId = slugify(endpoint.path.replace(/^\//, ""));
+  const title = buildEndpointTitle(endpoint);
   const suggestedPrice = Number((endpoint.estimatedCostPerCallUsd * 3).toFixed(2));
   const marginPercent = Math.round(
     ((suggestedPrice - endpoint.estimatedCostPerCallUsd) / suggestedPrice) * 100,
   );
-  const endpointId = slugify(endpoint.path.replace(/^\//, ""));
+  const requestPayload = buildExampleRequestPayload(endpoint);
+  const outputPreview = endpoint.outputFields.slice(0, 2).join(" and ") || "response data";
 
   const report: MonetizationReport = {
     reportId,
@@ -57,47 +126,38 @@ export function generateMonetizationReport(
     fixtureMode: true,
     endpoint,
     summary:
-      (options.summaryPrefix ? `${options.summaryPrefix} ` : "") +
       `${endpoint.method} ${endpoint.path} is a ${endpoint.domain} endpoint for ${endpoint.targetUsers}. ` +
-      `Fixture mode recommends per-call pricing with hybrid x402/API access for low-frequency, high-value agent calls.`,
-    readinessScore: 82,
+      `Per-call pricing with hybrid x402/API access fits ${endpoint.expectedUsage}.`,
+    readinessScore: mode === "live" ? 78 : 82,
     pricing: {
       model: "per_call",
       suggestedPricePerCallUsd: suggestedPrice,
       estimatedMarginPercent: marginPercent,
-      rationale:
-        "Low-frequency, high-value usage supports per-call pricing with roughly 3x cost coverage.",
+      rationale: `3x upstream cost ($${endpoint.estimatedCostPerCallUsd.toFixed(2)}) supports per-call margin for ${endpoint.domain} workloads.`,
       currency: "USD",
     },
     quota: {
       tier: "starter",
       requestsPerDay: 500,
       burstLimit: 20,
-      rationale:
-        "Low-frequency procurement and agent research traffic fits a conservative starter quota.",
+      rationale: `Starter quota matches ${endpoint.expectedUsage} for ${endpoint.targetUsers}.`,
     },
     accessModel: {
       primary: "hybrid",
       secondary: ["api_key", "x402"],
       agentReady: true,
       humanReady: true,
-      rationale:
-        "Machine-callable risk lookups benefit from x402 for agents and API keys for human workflows.",
+      rationale: `${endpoint.method} ${endpoint.path} is callable by agents (x402) and humans (API key).`,
     },
     x402Suitability: {
-      score: 88,
-      level: "high",
+      score: endpoint.domain === "data_api" ? 88 : 75,
+      level: endpoint.domain === "data_api" ? "high" : "medium",
       machineCallable: true,
       idempotent: true,
-      rationale:
-        "Structured inputs, deterministic JSON-style outputs, and low-frequency agent usage are strong x402 candidates.",
-      blockers: ["Live settlement remains deferred in fixture mode."],
+      rationale: `Structured inputs (${endpoint.inputFields.join(", ")}) and machine callers suit x402 for ${endpoint.path}.`,
+      blockers: ["Live settlement remains deferred in this demo."],
     },
-    abuseCostRisks: [
-      "Bulk enrichment on free tiers could inflate upstream data costs.",
-      "Domain/name typos may trigger repeated paid retries without validation.",
-      "High-cardinality lookups can be abused for passive reconnaissance.",
-    ],
+    abuseCostRisks: defaultAbuseRisks(endpoint),
     ceibaPolicy: {
       version: "0.1",
       endpointId,
@@ -132,19 +192,17 @@ export function generateMonetizationReport(
       },
     },
     docs: {
-      title: "Company Risk Score API",
-      summary:
-        "Look up a company risk score, sanctions flags, ESG notes, and supplier notes from company name and domain.",
-      exampleRequest: `POST ${endpoint.path}\n{\n  "companyName": "Acme Corp",\n  "domain": "acme.example"\n}`,
-      exampleResponse:
-        '{\n  "riskScore": 42,\n  "sanctionsFlags": [],\n  "esgNotes": "...",\n  "supplierNotes": "..."\n}',
+      title,
+      summary: `Call ${endpoint.method} ${endpoint.path} with ${endpoint.inputFields.join(" and ")} to retrieve ${outputPreview}.`,
+      exampleRequest: `${endpoint.method} ${endpoint.path}\n${JSON.stringify(requestPayload, null, 2)}`,
+      exampleResponse: buildExampleResponse(endpoint),
       markdown:
-        `# Company Risk Score\n\n` +
-        `Call \`${endpoint.method} ${endpoint.path}\` with \`companyName\` and \`domain\`.\n\n` +
-        `Returns risk score, sanctions flags, ESG notes, and supplier notes.`,
+        `# ${title}\n\n` +
+        `Call \`${endpoint.method} ${endpoint.path}\` with \`${endpoint.inputFields.join("`, `")}\`.\n\n` +
+        `Returns ${endpoint.outputFields.join(", ")}.`,
     },
     launchChecklist: {
-      title: "Company Risk Score launch checklist",
+      title: `${title} launch checklist`,
       items: [
         {
           id: "validate-schema",
@@ -153,23 +211,23 @@ export function generateMonetizationReport(
         },
         {
           id: "publish-mcp-tool",
-          label: "Publish MCP tool definition to agent clients",
+          label: `Publish MCP tool for ${endpoint.path}`,
           status: "todo",
         },
         {
           id: "configure-x402",
-          label: "Attach simulated x402 payment metadata",
+          label: `Attach simulated x402 metadata for ${endpoint.path}`,
           status: "in_progress",
         },
         {
           id: "draft-ceiba-policy",
-          label: "Review Ceiba policy draft with enforcement deferred",
+          label: `Review Ceiba policy draft for ${endpointId}`,
           status: "todo",
         },
       ],
     },
     simulatedPaidCall: {
-      callId: "sim-call-company-risk-score-001",
+      callId: `sim-call-${endpointId}-001`,
       endpoint: endpoint.path,
       method: endpoint.method,
       status: "settled_simulated",
@@ -177,15 +235,11 @@ export function generateMonetizationReport(
       currency: "USD",
       payerType: "agent",
       settlementMode: "simulated",
-      requestPayload: {
-        companyName: "Acme Corp",
-        domain: "acme.example",
-      },
-      responseSummary:
-        "Simulated paid call returned risk score 42 with no sanctions flags.",
+      requestPayload,
+      responseSummary: `Simulated paid call to ${endpoint.path} returned ${outputPreview}.`,
     },
     usageEvent: {
-      eventId: "usage-company-risk-score-001",
+      eventId: `usage-${endpointId}-001`,
       timestamp: generatedAt,
       endpoint: endpoint.path,
       callerType: "agent",

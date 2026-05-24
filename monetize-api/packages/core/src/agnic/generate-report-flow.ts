@@ -1,55 +1,49 @@
-import type { EndpointInput } from "@monetize-api/schemas";
-
 import { buildReportPackage, type ReportPackage } from "../artifacts/package-report.js";
 import { generateMonetizationReport } from "../generate-report.js";
 import { parseFixtureText } from "../parse-fixture.js";
+import { tryParseEndpointInput } from "../parse-endpoint-input.js";
 import { COMPANY_RISK_SCORE_FIXTURE, loadCompanyRiskScoreFixture } from "../load-fixture.js";
-import { callAgnicChatCompletion } from "./adapter.js";
 import type { AgnicConfig } from "./config.js";
-
-export const REPORT_GENERATION_PROMPT_PREFIX =
-  "You are MonetizeAPI. Analyze this API endpoint input for monetization potential. Reply in 2-3 sentences with pricing and agent-readiness guidance:\n\n";
+import {
+  applyNarrativeEnhancement,
+  generateReportNarrativeEnhancement,
+  NarrativeEnhancementError,
+} from "./narrative-enhancement.js";
+import { EndpointParseError } from "../parse-endpoint-input.js";
 
 export type PaidReportGenerationResult = {
   package: ReportPackage;
   parseSource: "user_input" | "fixture_fallback";
 };
 
-async function resolveEndpointInputAsync(rawInput: string): Promise<{
-  endpoint: EndpointInput;
-  parseSource: "user_input" | "fixture_fallback";
-}> {
-  const trimmed = rawInput.trim();
-  if (trimmed) {
-    try {
-      return {
-        endpoint: parseFixtureText(trimmed, "user-input"),
-        parseSource: "user_input",
-      };
-    } catch {
-      // fall through
-    }
+export async function generateFixtureReportPackage(
+  rawInput?: string,
+  options: { useCanonicalFixture?: boolean } = {},
+): Promise<PaidReportGenerationResult> {
+  const trimmed = rawInput?.trim() ?? "";
+  const parsed = trimmed ? tryParseEndpointInput(trimmed) : { ok: false as const, error: "" };
+
+  if (parsed.ok) {
+    const report = generateMonetizationReport(parsed.endpoint, { mode: "fixture" });
+    return {
+      parseSource: "user_input",
+      package: buildReportPackage({ report, mode: "fixture" }),
+    };
+  }
+
+  if (!options.useCanonicalFixture && trimmed) {
+    throw new EndpointParseError(
+      "We could not confidently parse this endpoint. Use the fixture demo instead.",
+    );
   }
 
   const fixtureRaw = await loadCompanyRiskScoreFixture();
+  const endpoint = parseFixtureText(fixtureRaw, COMPANY_RISK_SCORE_FIXTURE);
+  const report = generateMonetizationReport(endpoint, { mode: "fixture" });
+
   return {
-    endpoint: parseFixtureText(fixtureRaw, COMPANY_RISK_SCORE_FIXTURE),
     parseSource: "fixture_fallback",
-  };
-}
-
-export async function generateFixtureReportPackage(
-  rawInput?: string,
-): Promise<PaidReportGenerationResult> {
-  const { endpoint, parseSource } = await resolveEndpointInputAsync(rawInput ?? "");
-  const report = generateMonetizationReport(endpoint);
-
-  return {
-    parseSource,
-    package: buildReportPackage({
-      report,
-      mode: "fixture",
-    }),
+    package: buildReportPackage({ report, mode: "fixture" }),
   };
 }
 
@@ -57,26 +51,43 @@ export async function generatePaidReportPackage(params: {
   config: AgnicConfig;
   rawInput: string;
 }): Promise<PaidReportGenerationResult> {
-  const { endpoint, parseSource } = await resolveEndpointInputAsync(params.rawInput);
-  const prompt = `${REPORT_GENERATION_PROMPT_PREFIX}${params.rawInput.trim() || endpoint.path}`;
+  const parsed = tryParseEndpointInput(params.rawInput);
+  if (!parsed.ok) {
+    throw new EndpointParseError(parsed.error);
+  }
 
-  const modelResult = await callAgnicChatCompletion(params.config, prompt, {
-    maxTokens: 256,
-  });
-
-  const report = generateMonetizationReport(endpoint, {
+  const endpoint = parsed.endpoint;
+  const baseReport = generateMonetizationReport(endpoint, {
+    mode: "live",
     generatedAt: new Date().toISOString(),
-    summaryPrefix: modelResult.content,
   });
+
+  let narrativeResult;
+  try {
+    narrativeResult = await generateReportNarrativeEnhancement({
+      config: params.config,
+      endpoint,
+      rawInput: params.rawInput,
+    });
+  } catch (err) {
+    if (err instanceof NarrativeEnhancementError) {
+      throw err;
+    }
+    throw err;
+  }
+
+  const report = applyNarrativeEnhancement(baseReport, narrativeResult.enhancement);
 
   return {
-    parseSource,
+    parseSource: "user_input",
     package: buildReportPackage({
       report,
       mode: "live",
-      model: modelResult.model,
-      modelInsight: modelResult.content,
-      usage: modelResult.usage,
+      model: narrativeResult.model,
+      modelInsight: narrativeResult.enhancement.summary,
+      usage: narrativeResult.usage,
     }),
   };
 }
+
+export { NarrativeEnhancementError } from "./narrative-enhancement.js";

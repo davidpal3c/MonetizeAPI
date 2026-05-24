@@ -12,8 +12,8 @@
       "X-Caller-Type": "agent"
     },
     "body": {
-      "companyName": "Acme Corp",
-      "domain": "acme.example"
+      "companyName": "Example Corp",
+      "domain": "example.com"
     }
   },
   "paymentRequired": {
@@ -43,7 +43,7 @@
     "allowed": true,
     "mcpTool": {
       "name": "company-risk-score",
-      "description": "Returns risk score, sanctions flags, ESG notes, supplier notes for a company risk assessment.",
+      "description": "Calls POST /company-risk-score and returns risk score, sanctions flags, ESG notes, supplier notes.",
       "inputSchema": {
         "type": "object",
         "properties": {

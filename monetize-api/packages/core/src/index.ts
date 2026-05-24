@@ -1,6 +1,15 @@
 export { parseFixtureText } from "./parse-fixture.js";
+export {
+  EndpointParseError,
+  tryParseEndpointInput,
+  type ParseEndpointResult,
+} from "./parse-endpoint-input.js";
 export { buildReportPackage, serializeReportPackage, type ReportPackage } from "./artifacts/package-report.js";
-export { generateMonetizationReport, type GenerateReportOptions } from "./generate-report.js";
+export {
+  generateMonetizationReport,
+  type GenerateReportOptions,
+  type ReportGenerationMode,
+} from "./generate-report.js";
 export {
   AGNIC_TOPUP_COMPLETE_MESSAGE,
   AGNIC_TOPUP_ORIGIN,
@@ -10,9 +19,15 @@ export { fetchAgnicBalance, type AgnicBalance } from "./agnic/balance.js";
 export {
   generateFixtureReportPackage,
   generatePaidReportPackage,
-  REPORT_GENERATION_PROMPT_PREFIX,
+  NarrativeEnhancementError,
   type PaidReportGenerationResult,
 } from "./agnic/generate-report-flow.js";
+export {
+  applyNarrativeEnhancement,
+  generateReportNarrativeEnhancement,
+  parseAndValidateNarrativeEnhancement,
+  type ReportNarrativeEnhancement,
+} from "./agnic/narrative-enhancement.js";
 export {
   COMPANY_RISK_SCORE_FIXTURE,
   generateCompanyRiskScoreReport,

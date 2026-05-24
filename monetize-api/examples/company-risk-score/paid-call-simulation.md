@@ -11,8 +11,8 @@
 
 ```json
 {
-  "companyName": "Acme Corp",
-  "domain": "acme.example"
+  "companyName": "Example Corp",
+  "domain": "example.com"
 }
 ```
 
