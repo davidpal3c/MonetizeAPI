@@ -1,4 +1,4 @@
-/** Demo-grade zip download: separate artifact files, store-only (no compression). */
+/** Store-only ZIP (PKZIP) — separate artifact files for macOS/Windows unzip. */
 
 const ZIP_FILES = [
   "monetization-report.md",
@@ -26,17 +26,9 @@ const CRC_TABLE = (() => {
 function crc32(data: Uint8Array): number {
   let crc = 0xffffffff;
   for (let index = 0; index < data.length; index += 1) {
-    crc = CRC_TABLE[(crc ^ data[index]) & 0xff] ^ (crc >>> 8);
+    crc = CRC_TABLE[(crc ^ data[index]!) & 0xff]! ^ (crc >>> 8);
   }
   return (crc ^ 0xffffffff) >>> 0;
-}
-
-function u16(value: number): number[] {
-  return [value & 0xff, (value >>> 8) & 0xff];
-}
-
-function u32(value: number): number[] {
-  return [...u16(value & 0xffff), ...u16((value >>> 16) & 0xffff)];
 }
 
 const encoder = new TextEncoder();
@@ -59,10 +51,98 @@ export function selectZipEntries(files: Record<string, string>): Record<string, 
   return selected;
 }
 
-export function buildReportZipBlob(files: Record<string, string>): Blob {
+function writeLocalFileHeader(
+  nameBytes: Uint8Array,
+  dataBytes: Uint8Array,
+  checksum: number,
+): Uint8Array {
+  const buffer = new Uint8Array(30 + nameBytes.length + dataBytes.length);
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+
+  view.setUint32(0, 0x04034b50, true);
+  view.setUint16(4, 20, true);
+  view.setUint16(6, 0, true);
+  view.setUint16(8, 0, true);
+  view.setUint16(10, 0, true);
+  view.setUint16(12, 0, true);
+  view.setUint32(14, checksum, true);
+  view.setUint32(18, dataBytes.length, true);
+  view.setUint32(22, dataBytes.length, true);
+  view.setUint16(26, nameBytes.length, true);
+  view.setUint16(28, 0, true);
+
+  buffer.set(nameBytes, 30);
+  buffer.set(dataBytes, 30 + nameBytes.length);
+  return buffer;
+}
+
+function writeCentralDirectoryEntry(
+  nameBytes: Uint8Array,
+  checksum: number,
+  size: number,
+  offset: number,
+): Uint8Array {
+  const buffer = new Uint8Array(46 + nameBytes.length);
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+
+  view.setUint32(0, 0x02014b50, true);
+  view.setUint16(4, 20, true);
+  view.setUint16(6, 20, true);
+  view.setUint16(8, 0, true);
+  view.setUint16(10, 0, true);
+  view.setUint16(12, 0, true);
+  view.setUint16(14, 0, true);
+  view.setUint32(16, checksum, true);
+  view.setUint32(20, size, true);
+  view.setUint32(24, size, true);
+  view.setUint16(28, nameBytes.length, true);
+  view.setUint16(30, 0, true);
+  view.setUint16(32, 0, true);
+  view.setUint16(34, 0, true);
+  view.setUint16(36, 0, true);
+  view.setUint32(38, 0, true);
+  view.setUint32(42, offset, true);
+
+  buffer.set(nameBytes, 46);
+  return buffer;
+}
+
+function writeEndOfCentralDirectory(
+  entryCount: number,
+  centralSize: number,
+  centralOffset: number,
+): Uint8Array {
+  const buffer = new Uint8Array(22);
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+
+  view.setUint32(0, 0x06054b50, true);
+  view.setUint16(4, 0, true);
+  view.setUint16(6, 0, true);
+  view.setUint16(8, entryCount, true);
+  view.setUint16(10, entryCount, true);
+  view.setUint32(12, centralSize, true);
+  view.setUint32(16, centralOffset, true);
+  view.setUint16(20, 0, true);
+
+  return buffer;
+}
+
+function concatUint8Arrays(chunks: Uint8Array[]): Uint8Array {
+  const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
+}
+
+/** Binary zip bytes (valid PKZIP store). */
+export function buildReportZipBytes(files: Record<string, string>): Uint8Array {
   const entries = selectZipEntries(files);
-  const localParts: number[] = [];
-  const centralParts: number[] = [];
+  const localChunks: Uint8Array[] = [];
+  const centralChunks: Uint8Array[] = [];
   let offset = 0;
 
   for (const [name, content] of Object.entries(entries)) {
@@ -70,77 +150,29 @@ export function buildReportZipBlob(files: Record<string, string>): Blob {
     const dataBytes = encoder.encode(content);
     const checksum = crc32(dataBytes);
 
-    const localHeader = [
-      0x50,
-      0x4b,
-      0x03,
-      0x04,
-      ...u16(20),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u32(checksum),
-      ...u32(dataBytes.length),
-      ...u32(dataBytes.length),
-      ...u16(nameBytes.length),
-      ...u16(0),
-      ...nameBytes,
-      ...dataBytes,
-    ];
+    const local = writeLocalFileHeader(nameBytes, dataBytes, checksum);
+    localChunks.push(local);
 
-    localParts.push(...localHeader);
-
-    const centralHeader = [
-      0x50,
-      0x4b,
-      0x01,
-      0x02,
-      ...u16(20),
-      ...u16(20),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u32(checksum),
-      ...u32(dataBytes.length),
-      ...u32(dataBytes.length),
-      ...u16(nameBytes.length),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u16(0),
-      ...u32(0),
-      ...u32(offset),
-      ...nameBytes,
-    ];
-
-    centralParts.push(...centralHeader);
-    offset += localHeader.length;
+    centralChunks.push(
+      writeCentralDirectoryEntry(nameBytes, checksum, dataBytes.length, offset),
+    );
+    offset += local.length;
   }
 
+  const centralDirectory = concatUint8Arrays(centralChunks);
   const centralOffset = offset;
-  const centralSize = centralParts.length;
-  const endRecord = [
-    0x50,
-    0x4b,
-    0x05,
-    0x06,
-    ...u16(0),
-    ...u16(0),
-    ...u16(Object.keys(entries).length),
-    ...u16(Object.keys(entries).length),
-    ...u32(centralSize),
-    ...u32(centralOffset),
-    ...u16(0),
-  ];
+  const endRecord = writeEndOfCentralDirectory(
+    Object.keys(entries).length,
+    centralDirectory.length,
+    centralOffset,
+  );
 
-  const bytes = new Uint8Array([
-    ...localParts,
-    ...centralParts,
-    ...endRecord,
-  ]);
+  return concatUint8Arrays([...localChunks, centralDirectory, endRecord]);
+}
 
-  return new Blob([bytes], { type: "application/zip" });
+export function buildReportZipBlob(files: Record<string, string>): Blob {
+  const bytes = buildReportZipBytes(files);
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return new Blob([copy], { type: "application/zip" });
 }

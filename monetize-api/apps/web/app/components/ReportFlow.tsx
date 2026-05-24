@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { buildReportZipBlob } from "../../lib/build-report-zip";
+import {
+  formatMonetizeApiReportGenerationFee,
+  MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD,
+} from "../../lib/report-generation-cost";
 import type { PaidReportGenerationResult } from "../../lib/agnic-client";
 
 import { AddFundsButton } from "./AddFundsButton";
@@ -55,13 +59,16 @@ export function ReportFlow({
   const [needsFunds, setNeedsFunds] = useState(false);
   const [reportResult, setReportResult] = useState<PaidReportGenerationResult | null>(null);
   const [parseFailed, setParseFailed] = useState(false);
+  const [balanceRefreshWarning, setBalanceRefreshWarning] = useState<string | null>(
+    null,
+  );
 
   const restoredFromOAuth = useMemo(
     () => Boolean(initialInput && initialSignedIn),
     [initialInput, initialSignedIn],
   );
 
-  const fetchBalance = useCallback(async () => {
+  const fetchBalance = useCallback(async (): Promise<boolean> => {
     const response = await fetch("/api/agnic/balance", {
       cache: "no-store",
       credentials: "include",
@@ -70,15 +77,17 @@ export function ReportFlow({
     if (!response.ok) {
       setBalance(null);
       setBalanceError(data.error ?? "Unable to load balance");
-      return;
+      return false;
     }
     setBalance(data.balance);
     setCurrency(data.currency ?? "USD");
     setBalanceError(null);
+    return true;
   }, []);
 
   const refreshBalance = useCallback(async () => {
     setLoadingBalance(true);
+    setBalanceRefreshWarning(null);
     try {
       await fetchBalance();
     } catch {
@@ -88,6 +97,54 @@ export function ReportFlow({
       setLoadingBalance(false);
     }
   }, [fetchBalance]);
+
+  const refreshBalanceAfterReport = useCallback(async () => {
+    setLoadingBalance(true);
+    setBalanceRefreshWarning(null);
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    try {
+      let ok = await fetchBalance();
+      if (!ok) {
+        await delay(1500);
+        ok = await fetchBalance();
+      } else {
+        await delay(1200);
+        await fetchBalance();
+      }
+      if (!ok) {
+        setBalanceRefreshWarning(
+          "Your report was created, but we could not refresh your balance. Reload the page or try again in a moment.",
+        );
+      }
+    } catch {
+      setBalanceRefreshWarning(
+        "Your report was created, but we could not refresh your balance. Reload the page or try again in a moment.",
+      );
+    } finally {
+      setLoadingBalance(false);
+    }
+  }, [fetchBalance]);
+
+  const signOut = useCallback(async () => {
+    setError(null);
+    setReportResult(null);
+    try {
+      await fetch("/api/auth/sign-out", {
+        method: "POST",
+        credentials: "include",
+      });
+    } finally {
+      setSignedIn(false);
+      setClientId(null);
+      setTopupReturnUrl(null);
+      setBalance(null);
+      setBalanceError(null);
+      setTopupMessage(null);
+      setBalanceRefreshWarning(null);
+      window.location.href = "/";
+    }
+  }, []);
 
   const loadAuthState = useCallback(async () => {
     const hasInitialBalance = initialSignedIn && initialBalance != null && !initialBalanceError;
@@ -227,7 +284,7 @@ export function ReportFlow({
 
       setReportResult(data);
       if (mode === "live") {
-        await refreshBalance();
+        await refreshBalanceAfterReport();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Report generation failed.");
@@ -293,8 +350,27 @@ export function ReportFlow({
           loadingBalance={loadingBalance}
           inputRestored={restoredFromOAuth}
           topupMessage={topupMessage}
+          balanceRefreshWarning={balanceRefreshWarning}
         />
       )}
+
+      {signedIn ? (
+        <p
+          style={{
+            marginTop: "1rem",
+            padding: "0.75rem 1rem",
+            background: "#e3f2fd",
+            borderRadius: "6px",
+            fontSize: "0.9rem",
+            color: "#0d47a1",
+          }}
+        >
+          <strong>Report generation cost:</strong>{" "}
+          {formatMonetizeApiReportGenerationFee(MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD)}{" "}
+          per live report (charged to your Agnic balance for the MonetizeAPI enrichment step).
+          This is not your API&apos;s recommended price and not live x402 settlement.
+        </p>
+      ) : null}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem" }}>
         <button
@@ -342,6 +418,16 @@ export function ReportFlow({
             onBalanceRefresh={() => void refreshBalance()}
             disabled={!clientId}
           />
+        ) : null}
+        {signedIn ? (
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            disabled={generating}
+            style={secondaryButtonStyle}
+          >
+            Log out
+          </button>
         ) : null}
       </div>
 
@@ -435,6 +521,7 @@ function SignedInStatus({
   loadingBalance,
   inputRestored,
   topupMessage,
+  balanceRefreshWarning,
 }: {
   balance: number | null;
   balanceError: string | null;
@@ -442,6 +529,7 @@ function SignedInStatus({
   loadingBalance: boolean;
   inputRestored: boolean;
   topupMessage: string | null;
+  balanceRefreshWarning: string | null;
 }) {
   let balanceLabel: string;
   if (loadingBalance) {
@@ -463,6 +551,11 @@ function SignedInStatus({
       <p>Balance: {balanceLabel}</p>
       {topupMessage ? (
         <p style={{ color: "#1b5e20", fontSize: "0.9rem" }}>{topupMessage}</p>
+      ) : null}
+      {balanceRefreshWarning ? (
+        <p role="status" style={{ color: "#e65100", fontSize: "0.9rem" }}>
+          {balanceRefreshWarning}
+        </p>
       ) : null}
     </div>
   );

@@ -18,6 +18,10 @@ export {
 } from "./agnic/topup.js";
 export { fetchAgnicBalance, type AgnicBalance } from "./agnic/balance.js";
 export {
+  formatMonetizeApiReportGenerationFee,
+  MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD,
+} from "./agnic/report-generation-cost.js";
+export {
   generateFixtureReportPackage,
   generatePaidReportPackage,
   NarrativeEnhancementError,
