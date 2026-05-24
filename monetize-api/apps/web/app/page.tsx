@@ -1,8 +1,10 @@
+import { fetchAgnicBalance, getDefaultCompanyRiskScoreInput } from "@monetize-api/core";
 import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic";
+import { ReportFlow } from "./components/ReportFlow";
+import { PENDING_INPUT_COOKIE, TOKEN_COOKIE } from "../lib/agnic-cookies";
 
-const TOKEN_COOKIE = "agnic_access_token";
+export const dynamic = "force-dynamic";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -11,57 +13,70 @@ type HomePageProps = {
   }>;
 };
 
+function decodePendingInput(value: string | undefined): string {
+  if (!value) {
+    return "";
+  }
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const cookieStore = await cookies();
-  const hasToken = Boolean(cookieStore.get(TOKEN_COOKIE)?.value);
+  const accessToken = cookieStore.get(TOKEN_COOKIE)?.value?.trim();
+  const hasToken = Boolean(accessToken);
+  const pendingInput = decodePendingInput(cookieStore.get(PENDING_INPUT_COOKIE)?.value);
+  const defaultInput = getDefaultCompanyRiskScoreInput();
+
+  let initialBalance: number | null = null;
+  let initialBalanceError: string | null = null;
+  let initialCurrency = "USD";
+
+  if (accessToken) {
+    try {
+      const balance = await fetchAgnicBalance(accessToken, {
+        partnerId: process.env.AGNIC_PARTNER_ID?.trim() || undefined,
+      });
+      initialBalance = balance.balance;
+      initialCurrency = balance.currency;
+    } catch (err) {
+      initialBalanceError =
+        err instanceof Error ? err.message : "Unable to load Agnic balance";
+    }
+  }
 
   const authError = params.auth_error;
   const authErrorDetail = params.auth_error_detail;
 
   return (
-    <main>
+    <main style={{ maxWidth: "52rem", margin: "0 auto", padding: "1.5rem" }}>
       <h1>MonetizeAPI</h1>
       <p>From endpoint to paid agent-ready tool.</p>
 
-      {authError ? (
-        <div
-          role="alert"
-          style={{
-            marginBottom: "1rem",
-            padding: "0.75rem 1rem",
-            border: "1px solid #c62828",
-            borderRadius: "6px",
-            background: "#ffebee",
-            color: "#b71c1c",
-          }}
-        >
-          <strong>Sign-in failed ({authError})</strong>
-          {authErrorDetail ? <p style={{ margin: "0.5rem 0 0" }}>{authErrorDetail}</p> : null}
-        </div>
-      ) : null}
+      <ReportFlow
+        defaultInput={defaultInput}
+        initialInput={pendingInput}
+        initialSignedIn={hasToken}
+        initialBalance={initialBalance}
+        initialBalanceError={initialBalanceError}
+        initialCurrency={initialCurrency}
+        authError={params.auth_error}
+        authErrorDetail={params.auth_error_detail}
+      />
 
-      {hasToken ? (
-        <>
-          <p>Signed in with Agnic (access token stored in httpOnly cookie).</p>
-          <p>
-            <a href="/agnic/proof">Run Agnic model proof</a>
-          </p>
-        </>
-      ) : (
-        <p>Sign in with Agnic to obtain a user access token for model calls.</p>
-      )}
-
-      <p>
-        <a href="/api/auth/sign-in">Sign in with Agnic</a>
+      <p style={{ marginTop: "2rem", fontSize: "0.875rem", color: "#444" }}>
+        <a href="/agnic/proof">Agnic model proof</a> (engineering smoke test)
       </p>
 
       <p style={{ fontSize: "0.875rem", color: "#444" }}>
-        Use the same host you registered on the Agnic OAuth client (
-        <code>localhost</code> or <code>127.0.0.1</code> on port 3000). In the
-        Agnic client, add matching <strong>JavaScript origins</strong> and redirect
-        URIs (e.g. <code>http://localhost:3000</code> locally,{" "}
-        <code>https://monetizeapi.onrender.com</code> in production).
+        Register OAuth redirect URIs on your Agnic client (e.g.{" "}
+        <code>http://localhost:3000/auth/callback</code> locally,{" "}
+        <code>https://monetizeapi.onrender.com/auth/callback</code> in production).
+        Add Funds uses the same callback URL as top-up <code>return_url</code>.
       </p>
     </main>
   );

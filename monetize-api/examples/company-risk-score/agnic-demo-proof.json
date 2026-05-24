@@ -4,7 +4,7 @@
   "reason": "Skipped Agnic demo proof. Missing env: AGNIC_ACCESS_TOKEN",
   "env": {
     "baseUrl": "https://api.agnic.ai/v1",
-    "model": "gpt-4o-mini",
+    "model": "openai/gpt-4o-mini",
     "partnerIdSet": true,
     "accessTokenSet": false
   }

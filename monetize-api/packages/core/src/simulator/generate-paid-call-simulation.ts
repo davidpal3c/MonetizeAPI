@@ -18,7 +18,7 @@ export function generatePaidCallSimulation(
     simulationId: SIMULATION_ID,
     reportId: report.reportId,
     generatedAt: BASE_TIMESTAMP,
-    fixtureMode: true,
+    fixtureMode: report.fixtureMode,
     settlementMode: "simulated",
     endpointRequest: {
       method: simulatedPaidCall.method,

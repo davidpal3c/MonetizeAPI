@@ -6,7 +6,8 @@
 #   AGNIC_CLIENT_SECRET
 #   AGNIC_PARTNER_ID
 #   AGNIC_REDIRECT_URI  → https://<your-service>.onrender.com/auth/callback
-# Optional: AGNIC_BASE_URL, AGNIC_MODEL=openai/gpt-4o-mini, AGNIC_OAUTH_SCOPES
+# Optional: AGNIC_BASE_URL, AGNIC_MODEL=qwen/qwen3.5-flash-02-23, AGNIC_OAUTH_SCOPES
+# AGNIC_PARTNER_ID must be partner_… (not app_…). Top-up return_url uses AGNIC_REDIRECT_URI.
 
 services:
   - type: web

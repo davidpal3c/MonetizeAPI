@@ -4,7 +4,7 @@
 **Fixture mode:** yes
 **Readiness score:** 82/100
 ## Summary
-POST /company-risk-score is a data_api endpoint for procurement teams and AI research agents. Fixture mode recommends per-call pricing with hybrid x402/API access for low-frequency, high-value agent calls.
+POST /company-risk-score is a data_api endpoint for procurement teams and AI research agents. Per-call pricing with hybrid x402/API access fits low-frequency, high-value, machine-callable endpoint.
 ## Endpoint
 - **Method:** POST
 - **Path:** /company-risk-score
@@ -18,32 +18,32 @@ POST /company-risk-score is a data_api endpoint for procurement teams and AI res
 - **Model:** per_call
 - **Suggested price per call:** $0.12 USD
 - **Estimated margin:** 67%
-- **Rationale:** Low-frequency, high-value usage supports per-call pricing with roughly 3x cost coverage.
+- **Rationale:** 3x upstream cost ($0.04) supports per-call margin for data_api workloads.
 ## Quota
 - **Tier:** starter
 - **Requests per day:** 500
 - **Burst limit:** 20
-- **Rationale:** Low-frequency procurement and agent research traffic fits a conservative starter quota.
+- **Rationale:** Starter quota matches low-frequency, high-value, machine-callable endpoint for procurement teams and AI research agents.
 ## Access model
 - **Primary:** hybrid
 - **Secondary:** api_key, x402
 - **Agent ready:** yes
 - **Human ready:** yes
-- **Rationale:** Machine-callable risk lookups benefit from x402 for agents and API keys for human workflows.
+- **Rationale:** POST /company-risk-score is callable by agents (x402) and humans (API key).
 ## x402 suitability
 - **Score:** 88/100 (high)
 - **Machine callable:** yes
 - **Idempotent:** yes
-- **Rationale:** Structured inputs, deterministic JSON-style outputs, and low-frequency agent usage are strong x402 candidates.
+- **Rationale:** Structured inputs (companyName, domain) and machine callers suit x402 for /company-risk-score.
 - **Blockers:**
-- Live settlement remains deferred in fixture mode.
+- Live settlement remains deferred in this demo.
 ## Abuse and cost risks
-- Bulk enrichment on free tiers could inflate upstream data costs.
-- Domain/name typos may trigger repeated paid retries without validation.
-- High-cardinality lookups can be abused for passive reconnaissance.
+- High-cardinality companyName/domain lookups can inflate upstream costs.
+- Repeated retries on invalid data_api requests may waste paid quota.
+- Automated agents calling /company-risk-score without rate limits can spike spend.
 ## Simulated paid call
 - **Call ID:** sim-call-company-risk-score-001
 - **Status:** settled_simulated
 - **Price charged:** $0.12 USD
 - **Payer:** agent
-- **Summary:** Simulated paid call returned risk score 42 with no sanctions flags.
+- **Summary:** Simulated paid call to /company-risk-score returned risk score and sanctions flags.

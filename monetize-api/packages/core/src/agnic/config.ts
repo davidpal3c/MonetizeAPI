@@ -12,9 +12,9 @@ export type AgnicCredentialCheck = {
 };
 
 const DEFAULT_BASE_URL = "https://api.agnic.ai/v1";
-const DEFAULT_MODEL = "openai/gpt-4o-mini";
+const DEFAULT_MODEL = "qwen/qwen3.5-flash-02-23";
 
-/** Agnic requires "author/model" (e.g. openai/gpt-4o-mini). */
+/** Agnic requires "author/model" (e.g. qwen/qwen3.5-flash-02-23). */
 export function normalizeAgnicModel(raw: string): string {
   const model = raw.trim();
   if (!model) {

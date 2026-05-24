@@ -1,6 +1,6 @@
 # Company Risk Score API
 
-Look up a company risk score, sanctions flags, ESG notes, and supplier notes from company name and domain.
+Call POST /company-risk-score with companyName and domain to retrieve risk score and sanctions flags.
 
 ## Endpoint
 
@@ -11,8 +11,8 @@ Look up a company risk score, sanctions flags, ESG notes, and supplier notes fro
 ```http
 POST /company-risk-score
 {
-  "companyName": "Acme Corp",
-  "domain": "acme.example"
+  "companyName": "Example Corp",
+  "domain": "example.com"
 }
 ```
 
@@ -20,17 +20,17 @@ POST /company-risk-score
 
 ```json
 {
-  "riskScore": 42,
-  "sanctionsFlags": [],
-  "esgNotes": "...",
-  "supplierNotes": "..."
+  "risk score": "...",
+  "sanctions flags": "...",
+  "ESG notes": "...",
+  "supplier notes": "..."
 }
 ```
 
 ## Usage
 
-# Company Risk Score
+# Company Risk Score API
 
-Call `POST /company-risk-score` with `companyName` and `domain`.
+Call `POST /company-risk-score` with `companyName`, `domain`.
 
-Returns risk score, sanctions flags, ESG notes, and supplier notes.
+Returns risk score, sanctions flags, ESG notes, supplier notes.

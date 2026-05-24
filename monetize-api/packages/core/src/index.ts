@@ -1,11 +1,42 @@
 export { parseFixtureText } from "./parse-fixture.js";
-export { generateMonetizationReport } from "./generate-report.js";
+export {
+  EndpointParseError,
+  tryParseEndpointInput,
+  type ParseEndpointResult,
+} from "./parse-endpoint-input.js";
+export { buildReportPackage, serializeReportPackage, type ReportPackage } from "./artifacts/package-report.js";
+export {
+  generateMonetizationReport,
+  type GenerateReportOptions,
+  type ReportGenerationMode,
+} from "./generate-report.js";
+export {
+  AGNIC_TOPUP_COMPLETE_MESSAGE,
+  AGNIC_TOPUP_ORIGIN,
+  buildAgnicTopupUrl,
+} from "./agnic/topup.js";
+export { fetchAgnicBalance, type AgnicBalance } from "./agnic/balance.js";
+export {
+  generateFixtureReportPackage,
+  generatePaidReportPackage,
+  NarrativeEnhancementError,
+  type PaidReportGenerationResult,
+} from "./agnic/generate-report-flow.js";
+export {
+  applyNarrativeEnhancement,
+  generateReportNarrativeEnhancement,
+  parseAndValidateNarrativeEnhancement,
+  type ReportNarrativeEnhancement,
+} from "./agnic/narrative-enhancement.js";
 export {
   COMPANY_RISK_SCORE_FIXTURE,
+  FIXTURE_SOURCE_LABEL,
   generateCompanyRiskScoreReport,
   generateReportFromEndpoint,
+  getDefaultCompanyRiskScoreInput,
   loadCompanyRiskScoreFixture,
 } from "./load-fixture.js";
+export { COMPANY_RISK_SCORE_FIXTURE_TEXT } from "./fixtures/company-risk-score-input.js";
 export { renderCeibaPolicyJson } from "./artifacts/render-ceiba-policy-json.js";
 export { renderMcpToolJson } from "./artifacts/render-mcp-tool-json.js";
 export { renderX402PaymentJson } from "./artifacts/render-x402-payment-json.js";
@@ -38,6 +69,7 @@ export {
   resolveCallbackRedirectUri,
   resolveOAuthRedirectUri,
   resolvePublicOrigin,
+  resolveTopupReturnUrl,
   type AgnicTokenResponse,
 } from "./agnic/oauth.js";
 export { SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT } from "./agnic/demo-proof.js";

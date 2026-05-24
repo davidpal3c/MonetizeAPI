@@ -24,8 +24,10 @@ type OpenAIChatResponse = {
 export async function callAgnicChatCompletion(
   config: AgnicConfig,
   prompt: string,
+  options: { maxTokens?: number } = {},
 ): Promise<AgnicChatCompletionResult> {
   const endpoint = `${config.baseUrl}/chat/completions`;
+  const maxTokens = options.maxTokens ?? 120;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -37,7 +39,7 @@ export async function callAgnicChatCompletion(
     body: JSON.stringify({
       model: config.model,
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 120,
+      max_tokens: maxTokens,
     }),
   });
 
