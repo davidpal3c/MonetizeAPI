@@ -1,6 +1,7 @@
 export { parseFixtureText } from "./parse-fixture.js";
 export {
   EndpointParseError,
+  inferFreeTextEndpoint,
   tryParseEndpointInput,
   type ParseEndpointResult,
 } from "./parse-endpoint-input.js";

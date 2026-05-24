@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { PaidReportGenerationResult, ReportPackage } from "../../lib/agnic-client";
-import { serializeReportPackageClient } from "../../lib/agnic-client";
+import { buildReportZipBlob } from "../../lib/build-report-zip";
+import type { PaidReportGenerationResult } from "../../lib/agnic-client";
 
 import { AddFundsButton } from "./AddFundsButton";
 
@@ -154,7 +154,7 @@ export function ReportFlow({
     }
 
     if (topup === "success") {
-      setTopupMessage("Top-up successful — your balance is updated.");
+      setTopupMessage("Funds added — your balance has been updated.");
       void refreshBalance();
     }
 
@@ -216,7 +216,7 @@ export function ReportFlow({
           setParseFailed(true);
           setError(
             data.message ??
-              "We could not confidently parse this endpoint. Use the fixture demo instead?",
+              "We couldn't interpret that description. Try the sample demo or add a bit more detail.",
           );
           return;
         }
@@ -241,13 +241,11 @@ export function ReportFlow({
       return;
     }
 
-    const blob = new Blob([serializeReportPackageClient(reportResult.package as ReportPackage)], {
-      type: "application/json",
-    });
+    const blob = buildReportZipBlob(reportResult.package.files);
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `monetizeapi-report-${reportResult.package.reportId}.json`;
+    anchor.download = `monetizeapi-launch-package-${reportResult.package.reportId}.zip`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -255,16 +253,19 @@ export function ReportFlow({
   return (
     <section style={{ marginTop: "1.5rem" }}>
       {authError ? (
-        <AuthErrorAlert title={`Sign-in failed (${authError})`} detail={authErrorDetail} />
+        <AuthErrorAlert
+          title="We couldn't complete sign-in"
+          detail={authErrorDetail ?? authError}
+        />
       ) : null}
 
       <p style={{ fontSize: "0.95rem", color: "#333" }}>
-        New Agnic users start with <strong>$5 starter credit</strong> — try your first paid
-        report with no setup risk.
+        Describe your API in plain language or paste a structured spec. New Agnic accounts
+        include <strong>$5 starter credit</strong> for your first live report.
       </p>
 
       <label htmlFor="endpoint-input" style={{ display: "block", fontWeight: 600 }}>
-        Endpoint / API input
+        Your API or endpoint
       </label>
       <textarea
         id="endpoint-input"
@@ -282,7 +283,7 @@ export function ReportFlow({
 
       {!signedIn ? (
         <p style={{ marginTop: "1rem" }}>
-          Sign in with Agnic when you are ready to generate a paid live report.
+          Sign in with Agnic to generate a live, paid monetization report.
         </p>
       ) : (
         <SignedInStatus
@@ -290,7 +291,7 @@ export function ReportFlow({
           balanceError={balanceError}
           currency={currency}
           loadingBalance={loadingBalance}
-          restoredFromOAuth={restoredFromOAuth}
+          inputRestored={restoredFromOAuth}
           topupMessage={topupMessage}
         />
       )}
@@ -302,7 +303,7 @@ export function ReportFlow({
           disabled={generating}
           style={primaryButtonStyle}
         >
-          {generating ? "Generating…" : signedIn ? "Generate Report (paid)" : "Sign in & Generate Report"}
+          {generating ? "Generating…" : signedIn ? "Generate live report" : "Sign in & generate report"}
         </button>
         <button
           type="button"
@@ -310,7 +311,7 @@ export function ReportFlow({
           disabled={generating}
           style={secondaryButtonStyle}
         >
-          Generate demo report (fixture)
+          Try sample report (free)
         </button>
         {parseFailed ? (
           <button
@@ -319,7 +320,7 @@ export function ReportFlow({
             disabled={generating}
             style={secondaryButtonStyle}
           >
-            Use canonical fixture demo
+            Use sample company-risk API
           </button>
         ) : null}
         {!signedIn ? (
@@ -360,15 +361,20 @@ export function ReportFlow({
             borderRadius: "8px",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>Report package ready</h2>
+          <h2 style={{ marginTop: 0 }}>Your launch package is ready</h2>
           <p>
-            Mode: <strong>{reportResult.package.mode}</strong>
-            {reportResult.parseSource === "fixture_fallback"
-              ? " (canonical company-risk-score fixture)"
-              : null}
-          </p>
-          <p style={{ fontSize: "0.875rem", color: "#444" }}>
-            Report ID: {reportResult.package.reportId}
+            {reportResult.package.mode === "live" ? (
+              <>
+                <strong>Live report</strong> — generated with your Agnic balance.
+              </>
+            ) : (
+              <>
+                <strong>Sample report</strong>
+                {reportResult.parseSource === "fixture_fallback"
+                  ? " — built from our company-risk example."
+                  : " — no Agnic charge."}
+              </>
+            )}
           </p>
           {reportResult.package.files["monetization-report.json"] ? (
             <p style={{ fontSize: "0.875rem", color: "#444" }}>
@@ -377,37 +383,25 @@ export function ReportFlow({
                   const parsed = JSON.parse(
                     reportResult.package.files["monetization-report.json"],
                   ) as {
-                    fixtureMode?: boolean;
                     endpoint?: { method?: string; path?: string };
                   };
                   const endpointLabel = parsed.endpoint
                     ? `${parsed.endpoint.method} ${parsed.endpoint.path}`
-                    : "—";
-                  const modeLabel = parsed.fixtureMode
-                    ? "Fixture mode: yes"
-                    : "Fixture mode: no · Live paid report: yes";
-                  return `${modeLabel} · Endpoint: ${endpointLabel}`;
+                    : null;
+                  return endpointLabel ? `Endpoint: ${endpointLabel}` : null;
                 } catch {
-                  return "—";
+                  return null;
                 }
               })()}
             </p>
           ) : null}
           {reportResult.package.modelInsight ? (
             <p style={{ fontSize: "0.9rem" }}>
-              <strong>Model insight:</strong> {reportResult.package.modelInsight}
+              <strong>Highlights:</strong> {reportResult.package.modelInsight}
             </p>
           ) : null}
-          {reportResult.package.usage?.total_tokens != null ? (
-            <p style={{ fontSize: "0.875rem", color: "#444" }}>
-              Tokens used: {reportResult.package.usage.total_tokens}
-            </p>
-          ) : null}
-          <p style={{ fontSize: "0.875rem", color: "#444" }}>
-            Files: {Object.keys(reportResult.package.files).join(", ")}
-          </p>
           <button type="button" onClick={downloadPackage} style={downloadButtonStyle}>
-            Download report package
+            Download launch package (.zip)
           </button>
         </div>
       ) : null}
@@ -439,14 +433,14 @@ function SignedInStatus({
   balanceError,
   currency,
   loadingBalance,
-  restoredFromOAuth,
+  inputRestored,
   topupMessage,
 }: {
   balance: number | null;
   balanceError: string | null;
   currency: string;
   loadingBalance: boolean;
-  restoredFromOAuth: boolean;
+  inputRestored: boolean;
   topupMessage: string | null;
 }) {
   let balanceLabel: string;
@@ -464,7 +458,7 @@ function SignedInStatus({
     <div style={{ marginTop: "1rem" }}>
       <p style={{ color: "#1b5e20", fontWeight: 600 }}>
         Signed in with Agnic
-        {restoredFromOAuth ? " — your input was restored after OAuth." : null}
+        {inputRestored ? " — we kept your API description." : null}
       </p>
       <p>Balance: {balanceLabel}</p>
       {topupMessage ? (

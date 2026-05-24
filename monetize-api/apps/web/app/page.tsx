@@ -49,13 +49,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     }
   }
 
-  const authError = params.auth_error;
-  const authErrorDetail = params.auth_error_detail;
-
   return (
     <main style={{ maxWidth: "52rem", margin: "0 auto", padding: "1.5rem" }}>
       <h1>MonetizeAPI</h1>
-      <p>From endpoint to paid agent-ready tool.</p>
+      <p>Turn any API idea into a paid, agent-ready launch package in minutes.</p>
 
       <ReportFlow
         defaultInput={defaultInput}
@@ -67,17 +64,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         authError={params.auth_error}
         authErrorDetail={params.auth_error_detail}
       />
-
-      <p style={{ marginTop: "2rem", fontSize: "0.875rem", color: "#444" }}>
-        <a href="/agnic/proof">Agnic model proof</a> (engineering smoke test)
-      </p>
-
-      <p style={{ fontSize: "0.875rem", color: "#444" }}>
-        Register OAuth redirect URIs on your Agnic client (e.g.{" "}
-        <code>http://localhost:3000/auth/callback</code> locally,{" "}
-        <code>https://monetizeapi.onrender.com/auth/callback</code> in production).
-        Add Funds uses the same callback URL as top-up <code>return_url</code>.
-      </p>
     </main>
   );
 }

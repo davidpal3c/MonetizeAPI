@@ -36,7 +36,7 @@ export async function generateFixtureReportPackage(
 
   if (!options.useCanonicalFixture && trimmed) {
     throw new EndpointParseError(
-      "We could not confidently parse this endpoint. Use the fixture demo instead.",
+      "We couldn't interpret that description. Try the sample demo or add a bit more detail.",
     );
   }
 
