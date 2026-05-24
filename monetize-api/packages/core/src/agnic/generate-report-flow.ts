@@ -2,7 +2,10 @@ import { buildReportPackage, type ReportPackage } from "../artifacts/package-rep
 import { generateMonetizationReport } from "../generate-report.js";
 import { parseFixtureText } from "../parse-fixture.js";
 import { tryParseEndpointInput } from "../parse-endpoint-input.js";
-import { COMPANY_RISK_SCORE_FIXTURE, loadCompanyRiskScoreFixture } from "../load-fixture.js";
+import {
+  FIXTURE_SOURCE_LABEL,
+  loadCompanyRiskScoreFixture,
+} from "../load-fixture.js";
 import type { AgnicConfig } from "./config.js";
 import {
   applyNarrativeEnhancement,
@@ -38,7 +41,7 @@ export async function generateFixtureReportPackage(
   }
 
   const fixtureRaw = await loadCompanyRiskScoreFixture();
-  const endpoint = parseFixtureText(fixtureRaw, COMPANY_RISK_SCORE_FIXTURE);
+  const endpoint = parseFixtureText(fixtureRaw, FIXTURE_SOURCE_LABEL);
   const report = generateMonetizationReport(endpoint, { mode: "fixture" });
 
   return {

@@ -1,4 +1,4 @@
-import { loadCompanyRiskScoreFixture } from "@monetize-api/core";
+import { getDefaultCompanyRiskScoreInput } from "@monetize-api/core";
 import { cookies } from "next/headers";
 
 import { ReportFlow } from "./components/ReportFlow";
@@ -29,7 +29,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const cookieStore = await cookies();
   const hasToken = Boolean(cookieStore.get(TOKEN_COOKIE)?.value);
   const pendingInput = decodePendingInput(cookieStore.get(PENDING_INPUT_COOKIE)?.value);
-  const defaultInput = await loadCompanyRiskScoreFixture();
+  const defaultInput = getDefaultCompanyRiskScoreInput();
 
   return (
     <main style={{ maxWidth: "52rem", margin: "0 auto", padding: "1.5rem" }}>

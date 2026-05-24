@@ -30,10 +30,13 @@ export {
 } from "./agnic/narrative-enhancement.js";
 export {
   COMPANY_RISK_SCORE_FIXTURE,
+  FIXTURE_SOURCE_LABEL,
   generateCompanyRiskScoreReport,
   generateReportFromEndpoint,
+  getDefaultCompanyRiskScoreInput,
   loadCompanyRiskScoreFixture,
 } from "./load-fixture.js";
+export { COMPANY_RISK_SCORE_FIXTURE_TEXT } from "./fixtures/company-risk-score-input.js";
 export { renderCeibaPolicyJson } from "./artifacts/render-ceiba-policy-json.js";
 export { renderMcpToolJson } from "./artifacts/render-mcp-tool-json.js";
 export { renderX402PaymentJson } from "./artifacts/render-x402-payment-json.js";
