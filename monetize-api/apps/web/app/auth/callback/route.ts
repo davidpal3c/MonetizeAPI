@@ -31,13 +31,6 @@ function redirectWithTopupResult(
   return NextResponse.redirect(home);
 }
 
-function redirectWithError(origin: string, code: string, detail: string): NextResponse {
-  const home = new URL("/", origin);
-  home.searchParams.set("auth_error", code);
-  home.searchParams.set("auth_error_detail", detail);
-  return NextResponse.redirect(home);
-}
-
 export async function GET(request: Request) {
   const clientId = process.env.AGNIC_CLIENT_ID?.trim();
   const clientSecret = process.env.AGNIC_CLIENT_SECRET?.trim();
