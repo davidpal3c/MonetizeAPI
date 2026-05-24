@@ -1,4 +1,4 @@
-import { getDefaultCompanyRiskScoreInput } from "@monetize-api/core";
+import { fetchAgnicBalance, getDefaultCompanyRiskScoreInput } from "@monetize-api/core";
 import { cookies } from "next/headers";
 
 import { ReportFlow } from "./components/ReportFlow";
@@ -27,9 +27,27 @@ function decodePendingInput(value: string | undefined): string {
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const cookieStore = await cookies();
-  const hasToken = Boolean(cookieStore.get(TOKEN_COOKIE)?.value);
+  const accessToken = cookieStore.get(TOKEN_COOKIE)?.value?.trim();
+  const hasToken = Boolean(accessToken);
   const pendingInput = decodePendingInput(cookieStore.get(PENDING_INPUT_COOKIE)?.value);
   const defaultInput = getDefaultCompanyRiskScoreInput();
+
+  let initialBalance: number | null = null;
+  let initialBalanceError: string | null = null;
+  let initialCurrency = "USD";
+
+  if (accessToken) {
+    try {
+      const balance = await fetchAgnicBalance(accessToken, {
+        partnerId: process.env.AGNIC_PARTNER_ID?.trim() || undefined,
+      });
+      initialBalance = balance.balance;
+      initialCurrency = balance.currency;
+    } catch (err) {
+      initialBalanceError =
+        err instanceof Error ? err.message : "Unable to load Agnic balance";
+    }
+  }
 
   return (
     <main style={{ maxWidth: "52rem", margin: "0 auto", padding: "1.5rem" }}>
@@ -40,6 +58,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         defaultInput={defaultInput}
         initialInput={pendingInput}
         initialSignedIn={hasToken}
+        initialBalance={initialBalance}
+        initialBalanceError={initialBalanceError}
+        initialCurrency={initialCurrency}
         authError={params.auth_error}
         authErrorDetail={params.auth_error_detail}
       />

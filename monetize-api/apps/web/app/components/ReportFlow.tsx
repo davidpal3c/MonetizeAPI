@@ -11,6 +11,9 @@ type ReportFlowProps = {
   defaultInput: string;
   initialInput?: string;
   initialSignedIn: boolean;
+  initialBalance?: number | null;
+  initialBalanceError?: string | null;
+  initialCurrency?: string;
   authError?: string;
   authErrorDetail?: string;
 };
@@ -32,6 +35,9 @@ export function ReportFlow({
   defaultInput,
   initialInput = "",
   initialSignedIn,
+  initialBalance = null,
+  initialBalanceError = null,
+  initialCurrency = "USD",
   authError,
   authErrorDetail,
 }: ReportFlowProps) {
@@ -39,9 +45,9 @@ export function ReportFlow({
   const [signedIn, setSignedIn] = useState(initialSignedIn);
   const [clientId, setClientId] = useState<string | null>(null);
   const [topupReturnUrl, setTopupReturnUrl] = useState<string | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
-  const [balanceError, setBalanceError] = useState<string | null>(null);
-  const [currency, setCurrency] = useState("USD");
+  const [balance, setBalance] = useState<number | null>(initialBalance);
+  const [balanceError, setBalanceError] = useState<string | null>(initialBalanceError);
+  const [currency, setCurrency] = useState(initialCurrency);
   const [topupMessage, setTopupMessage] = useState<string | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -55,48 +61,80 @@ export function ReportFlow({
     [initialInput, initialSignedIn],
   );
 
-  const refreshSession = useCallback(async () => {
-    const response = await fetch("/api/agnic/session", { cache: "no-store" });
+  const fetchBalance = useCallback(async () => {
+    const response = await fetch("/api/agnic/balance", {
+      cache: "no-store",
+      credentials: "include",
+    });
+    const data = (await response.json()) as BalanceResponse;
     if (!response.ok) {
+      setBalance(null);
+      setBalanceError(data.error ?? "Unable to load balance");
       return;
     }
-    const data = (await response.json()) as SessionResponse;
-    setSignedIn(data.signedIn);
-    setClientId(data.clientId);
-    setTopupReturnUrl(data.topupReturnUrl ?? null);
+    setBalance(data.balance);
+    setCurrency(data.currency ?? "USD");
+    setBalanceError(null);
   }, []);
 
   const refreshBalance = useCallback(async () => {
-    if (!signedIn) {
-      setBalance(null);
-      setBalanceError(null);
-      return;
-    }
-
     setLoadingBalance(true);
     try {
-      const response = await fetch("/api/agnic/balance", { cache: "no-store" });
-      const data = (await response.json()) as BalanceResponse;
-      if (!response.ok) {
-        setBalance(null);
-        setBalanceError(data.error ?? "Balance fetch failed");
-        return;
-      }
-      setBalance(data.balance);
-      setCurrency(data.currency ?? "USD");
-      setBalanceError(null);
+      await fetchBalance();
+    } catch {
+      setBalance(null);
+      setBalanceError("Unable to load balance");
     } finally {
       setLoadingBalance(false);
     }
-  }, [signedIn]);
+  }, [fetchBalance]);
+
+  const loadAuthState = useCallback(async () => {
+    const hasInitialBalance = initialSignedIn && initialBalance != null && !initialBalanceError;
+    if (!hasInitialBalance) {
+      setLoadingBalance(true);
+    }
+
+    try {
+      const sessionResponse = await fetch("/api/agnic/session", {
+        cache: "no-store",
+        credentials: "include",
+      });
+
+      if (!sessionResponse.ok) {
+        setSignedIn(false);
+        setClientId(null);
+        setTopupReturnUrl(null);
+        setBalance(null);
+        setBalanceError("Unable to verify Agnic session");
+        return;
+      }
+
+      const session = (await sessionResponse.json()) as SessionResponse;
+      setSignedIn(session.signedIn);
+      setClientId(session.clientId);
+      setTopupReturnUrl(session.topupReturnUrl ?? null);
+
+      if (!session.signedIn) {
+        setBalance(null);
+        setBalanceError(null);
+        return;
+      }
+
+      await fetchBalance();
+    } catch {
+      setBalance(null);
+      setBalanceError("Unable to load balance");
+    } finally {
+      if (!hasInitialBalance) {
+        setLoadingBalance(false);
+      }
+    }
+  }, [fetchBalance, initialSignedIn, initialBalance, initialBalanceError]);
 
   useEffect(() => {
-    void refreshSession();
-  }, [refreshSession]);
-
-  useEffect(() => {
-    void refreshBalance();
-  }, [refreshBalance, signedIn]);
+    void loadAuthState();
+  }, [loadAuthState]);
 
   useEffect(() => {
     if (restoredFromOAuth) {
@@ -417,9 +455,9 @@ function SignedInStatus({
   } else if (balance != null) {
     balanceLabel = `$${balance.toFixed(2)} ${currency}`;
   } else if (balanceError) {
-    balanceLabel = `Unavailable (${balanceError})`;
+    balanceLabel = `Unable to load balance (${balanceError})`;
   } else {
-    balanceLabel = "Unavailable";
+    balanceLabel = "Unable to load balance";
   }
 
   return (

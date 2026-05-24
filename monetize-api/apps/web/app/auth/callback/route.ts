@@ -7,9 +7,9 @@ import {
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+import { TOKEN_COOKIE } from "../../../lib/agnic-cookies";
 
-const TOKEN_COOKIE = "agnic_access_token";
+export const dynamic = "force-dynamic";
 
 function redirectWithError(origin: string, code: string, detail: string): NextResponse {
   const home = new URL("/", origin);

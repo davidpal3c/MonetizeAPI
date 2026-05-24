@@ -14,9 +14,17 @@ export async function GET() {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
   }
 
+  const partnerId = process.env.AGNIC_PARTNER_ID?.trim();
+
   try {
-    const balance = await fetchAgnicBalance(accessToken);
-    return NextResponse.json(balance);
+    const balance = await fetchAgnicBalance(accessToken, { partnerId: partnerId || undefined });
+    return NextResponse.json({
+      balance: balance.balance,
+      currency: balance.currency,
+      totalBalance: balance.totalBalance,
+      creditBalance: balance.creditBalance,
+      usdcBalance: balance.usdcBalance,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Balance fetch failed";
     const httpStatus =
