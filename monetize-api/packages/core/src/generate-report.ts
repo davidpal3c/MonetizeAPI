@@ -4,6 +4,12 @@ import { MonetizationReportSchema } from "@monetize-api/schemas";
 const FIXTURE_REPORT_ID = "report-company-risk-score-fixture-v1";
 const FIXTURE_GENERATED_AT = "2026-05-16T00:00:00.000Z";
 
+export type GenerateReportOptions = {
+  reportId?: string;
+  generatedAt?: string;
+  summaryPrefix?: string;
+};
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -35,7 +41,10 @@ function buildMcpTool(endpoint: EndpointInput) {
 
 export function generateMonetizationReport(
   endpoint: EndpointInput,
+  options: GenerateReportOptions = {},
 ): MonetizationReport {
+  const generatedAt = options.generatedAt ?? FIXTURE_GENERATED_AT;
+  const reportId = options.reportId ?? FIXTURE_REPORT_ID;
   const suggestedPrice = Number((endpoint.estimatedCostPerCallUsd * 3).toFixed(2));
   const marginPercent = Math.round(
     ((suggestedPrice - endpoint.estimatedCostPerCallUsd) / suggestedPrice) * 100,
@@ -43,11 +52,12 @@ export function generateMonetizationReport(
   const endpointId = slugify(endpoint.path.replace(/^\//, ""));
 
   const report: MonetizationReport = {
-    reportId: FIXTURE_REPORT_ID,
-    generatedAt: FIXTURE_GENERATED_AT,
+    reportId,
+    generatedAt,
     fixtureMode: true,
     endpoint,
     summary:
+      (options.summaryPrefix ? `${options.summaryPrefix} ` : "") +
       `${endpoint.method} ${endpoint.path} is a ${endpoint.domain} endpoint for ${endpoint.targetUsers}. ` +
       `Fixture mode recommends per-call pricing with hybrid x402/API access for low-frequency, high-value agent calls.`,
     readinessScore: 82,
@@ -176,7 +186,7 @@ export function generateMonetizationReport(
     },
     usageEvent: {
       eventId: "usage-company-risk-score-001",
-      timestamp: FIXTURE_GENERATED_AT,
+      timestamp: generatedAt,
       endpoint: endpoint.path,
       callerType: "agent",
       units: 1,

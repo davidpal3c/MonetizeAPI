@@ -1,5 +1,18 @@
 export { parseFixtureText } from "./parse-fixture.js";
-export { generateMonetizationReport } from "./generate-report.js";
+export { buildReportPackage, serializeReportPackage, type ReportPackage } from "./artifacts/package-report.js";
+export { generateMonetizationReport, type GenerateReportOptions } from "./generate-report.js";
+export {
+  AGNIC_TOPUP_COMPLETE_MESSAGE,
+  AGNIC_TOPUP_ORIGIN,
+  buildAgnicTopupUrl,
+} from "./agnic/topup.js";
+export { fetchAgnicBalance, type AgnicBalance } from "./agnic/balance.js";
+export {
+  generateFixtureReportPackage,
+  generatePaidReportPackage,
+  REPORT_GENERATION_PROMPT_PREFIX,
+  type PaidReportGenerationResult,
+} from "./agnic/generate-report-flow.js";
 export {
   COMPANY_RISK_SCORE_FIXTURE,
   generateCompanyRiskScoreReport,
