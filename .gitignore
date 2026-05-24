@@ -4,13 +4,17 @@ node_modules/
 _workspace/
 
 dist/
+*.tsbuildinfo
 docs/
 docs/implementation-notes.md
+
+
 
 # Secrets and local env
 .env
 .env.*
 !.env.example
-monetize-api/.env
 monetize-api/apps/web/.env.local
 monetize-api/apps/web/.next/
+monetize-api/docs/
+monetize-api/docs

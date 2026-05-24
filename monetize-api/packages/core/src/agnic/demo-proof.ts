@@ -1,9 +1,13 @@
 import type { AgnicConfig } from "./config.js";
-import { loadAgnicConfigFromEnv } from "./config.js";
+import { loadAgnicConfigFromEnv, normalizeAgnicModel } from "./config.js";
 import { callAgnicChatCompletion } from "./adapter.js";
 import type { AgnicDemoProof } from "./types.js";
 
-const DEMO_PROMPT =
+/** Stable timestamp for skipped proofs so CLI runs do not churn the example file. */
+export const SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT =
+  "2026-05-16T00:00:00.000Z";
+
+export const AGNIC_DEMO_PROOF_PROMPT =
   "In one sentence, explain why a company-risk-score API should use per-call pricing for procurement agents.";
 
 function preview(text: string, max = 240): string {
@@ -18,13 +22,20 @@ function baseProofFields(
   reason: string,
   config?: AgnicConfig,
 ): AgnicDemoProof {
+  const generatedAt =
+    status === "skipped"
+      ? SKIPPED_AGNIC_DEMO_PROOF_GENERATED_AT
+      : new Date().toISOString();
+
   return {
     status,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     reason,
     env: {
       baseUrl: config?.baseUrl ?? process.env.AGNIC_BASE_URL ?? "https://api.agnic.ai/v1",
-      model: config?.model ?? process.env.AGNIC_MODEL ?? "gpt-4o-mini",
+      model: normalizeAgnicModel(
+        config?.model ?? process.env.AGNIC_MODEL ?? "openai/gpt-4o-mini",
+      ),
       partnerIdSet: Boolean(process.env.AGNIC_PARTNER_ID?.trim()),
       accessTokenSet: Boolean(process.env.AGNIC_ACCESS_TOKEN?.trim()),
     },
@@ -45,7 +56,7 @@ export async function runAgnicDemoProof(): Promise<AgnicDemoProof> {
   const endpoint = `${config.baseUrl}/chat/completions`;
 
   try {
-    const result = await callAgnicChatCompletion(config, DEMO_PROMPT);
+    const result = await callAgnicChatCompletion(config, AGNIC_DEMO_PROOF_PROMPT);
 
     return {
       ...baseProofFields("success", "Agnic model call succeeded.", config),
@@ -53,7 +64,7 @@ export async function runAgnicDemoProof(): Promise<AgnicDemoProof> {
         endpoint,
         method: "POST",
         headersSent: ["Authorization", "Content-Type", "X-Partner-Id"],
-        prompt: DEMO_PROMPT,
+        prompt: AGNIC_DEMO_PROOF_PROMPT,
       },
       response: {
         model: result.model,
@@ -78,7 +89,7 @@ export async function runAgnicDemoProof(): Promise<AgnicDemoProof> {
         endpoint,
         method: "POST",
         headersSent: ["Authorization", "Content-Type", "X-Partner-Id"],
-        prompt: DEMO_PROMPT,
+        prompt: AGNIC_DEMO_PROOF_PROMPT,
       },
       error: { message, httpStatus },
     };

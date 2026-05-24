@@ -1,18 +1,37 @@
-const AGNIC_AUTHORIZE_URL = "https://app.agnic.ai/oauth/authorize";
+import { randomUUID } from "node:crypto";
+
+/** Official authorize host per https://docs.agnic.ai/docs/authentication/oauth2 */
+const AGNIC_AUTHORIZE_URL = "https://api.agnic.ai/oauth/authorize";
 const AGNIC_TOKEN_URL = "https://api.agnic.ai/oauth/token";
 
-const DEFAULT_SCOPES = "profile balance:read api:call";
+/** Default scopes for OAuth consent (model + balance). Override with AGNIC_OAUTH_SCOPES. */
+const DEFAULT_SCOPES = "payments:sign balance:read api:call";
+
+export const AGNIC_OAUTH_STATE_COOKIE = "agnic_oauth_state";
+
+/** Max age (seconds) for the OAuth state cookie stored before authorize redirect. */
+export const AGNIC_OAUTH_STATE_MAX_AGE = 600;
+
+export function generateAgnicOAuthState(): string {
+  return randomUUID();
+}
+
+export function resolveAgnicOAuthScopes(): string {
+  return process.env.AGNIC_OAUTH_SCOPES?.trim() || DEFAULT_SCOPES;
+}
 
 export function buildAgnicAuthorizeUrl(params: {
   clientId: string;
   redirectUri: string;
+  state: string;
   scopes?: string;
 }): string {
   const search = new URLSearchParams({
     client_id: params.clientId,
     redirect_uri: params.redirectUri,
     response_type: "code",
-    scope: params.scopes ?? DEFAULT_SCOPES,
+    scope: params.scopes ?? resolveAgnicOAuthScopes(),
+    state: params.state,
   });
 
   return `${AGNIC_AUTHORIZE_URL}?${search.toString()}`;
@@ -61,4 +80,38 @@ export async function exchangeAgnicAuthorizationCode(params: {
 
 export function resolveCallbackRedirectUri(origin: string): string {
   return `${origin.replace(/\/$/, "")}/auth/callback`;
+}
+
+/** Public site origin (Render/proxy-safe). */
+export function resolvePublicOrigin(request: Request): string {
+  const fromEnv = process.env.AGNIC_REDIRECT_URI?.trim();
+  if (fromEnv) {
+    try {
+      return new URL(fromEnv).origin;
+    } catch {
+      // ignore invalid AGNIC_REDIRECT_URI
+    }
+  }
+
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  if (forwardedHost) {
+    const host = forwardedHost.split(",")[0]?.trim();
+    if (host) {
+      const proto =
+        request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
+        "https";
+      return `${proto}://${host}`;
+    }
+  }
+
+  return new URL(request.url).origin;
+}
+
+/** OAuth redirect_uri for authorize + token exchange (must match Agnic registration). */
+export function resolveOAuthRedirectUri(request: Request): string {
+  const fromEnv = process.env.AGNIC_REDIRECT_URI?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  return resolveCallbackRedirectUri(resolvePublicOrigin(request));
 }

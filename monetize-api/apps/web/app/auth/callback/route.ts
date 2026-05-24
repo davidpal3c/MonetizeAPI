@@ -1,34 +1,70 @@
 import {
+  AGNIC_OAUTH_STATE_COOKIE,
   exchangeAgnicAuthorizationCode,
-  resolveCallbackRedirectUri,
+  resolveOAuthRedirectUri,
+  resolvePublicOrigin,
 } from "@monetize-api/core";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 
 const TOKEN_COOKIE = "agnic_access_token";
 
+function redirectWithError(origin: string, code: string, detail: string): NextResponse {
+  const home = new URL("/", origin);
+  home.searchParams.set("auth_error", code);
+  home.searchParams.set("auth_error_detail", detail);
+  return NextResponse.redirect(home);
+}
+
 export async function GET(request: Request) {
-  const clientId = process.env.NEXT_PUBLIC_AGNIC_CLIENT_ID?.trim();
+  const clientId = process.env.AGNIC_CLIENT_ID?.trim();
   const clientSecret = process.env.AGNIC_CLIENT_SECRET?.trim();
 
+  const url = new URL(request.url);
+  const origin = resolvePublicOrigin(request);
+
   if (!clientId || !clientSecret) {
-    return new Response("Missing Agnic OAuth client configuration", {
-      status: 500,
-    });
+    return redirectWithError(
+      origin,
+      "config",
+      "Missing Agnic OAuth client configuration.",
+    );
   }
 
-  const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
+  const errorDescription = url.searchParams.get("error_description");
+  const stateParam = url.searchParams.get("state");
 
   if (error) {
-    return new Response(`Agnic OAuth error: ${error}`, { status: 400 });
+    const detail = errorDescription
+      ? `${error}: ${errorDescription}`
+      : error;
+    return redirectWithError(origin, "agnic", detail);
+  }
+
+  const cookieStore = await cookies();
+  const stateCookie = cookieStore.get(AGNIC_OAUTH_STATE_COOKIE)?.value;
+
+  if (!stateParam || !stateCookie || stateParam !== stateCookie) {
+    return redirectWithError(
+      origin,
+      "state",
+      "Invalid or missing OAuth state. Sign in again using the same host (localhost or 127.0.0.1).",
+    );
   }
 
   if (!code) {
-    return new Response("Missing authorization code", { status: 400 });
+    return redirectWithError(
+      origin,
+      "code",
+      "Missing authorization code from Agnic.",
+    );
   }
 
-  const redirectUri = resolveCallbackRedirectUri(url.origin);
+  const redirectUri = resolveOAuthRedirectUri(request);
 
   try {
     const token = await exchangeAgnicAuthorizationCode({
@@ -38,18 +74,25 @@ export async function GET(request: Request) {
       redirectUri,
     });
 
-    const response = NextResponse.redirect(new URL("/", url.origin));
+    const response = NextResponse.redirect(new URL("/", origin));
     response.cookies.set(TOKEN_COOKIE, token.access_token, {
       httpOnly: true,
-      secure: url.protocol === "https:",
+      secure: origin.startsWith("https:"),
       sameSite: "lax",
       path: "/",
       maxAge: token.expires_in ?? 60 * 60 * 24 * 7,
+    });
+    response.cookies.set(AGNIC_OAUTH_STATE_COOKIE, "", {
+      httpOnly: true,
+      secure: origin.startsWith("https:"),
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
     });
 
     return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Token exchange failed";
-    return new Response(message, { status: 502 });
+    return redirectWithError(origin, "token", message);
   }
 }

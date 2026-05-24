@@ -12,7 +12,19 @@ export type AgnicCredentialCheck = {
 };
 
 const DEFAULT_BASE_URL = "https://api.agnic.ai/v1";
-const DEFAULT_MODEL = "gpt-4o-mini";
+const DEFAULT_MODEL = "openai/gpt-4o-mini";
+
+/** Agnic requires "author/model" (e.g. openai/gpt-4o-mini). */
+export function normalizeAgnicModel(raw: string): string {
+  const model = raw.trim();
+  if (!model) {
+    return DEFAULT_MODEL;
+  }
+  if (model.includes("/")) {
+    return model;
+  }
+  return `openai/${model}`;
+}
 
 export function loadAgnicConfigFromEnv(
   env: NodeJS.ProcessEnv = process.env,
@@ -40,7 +52,39 @@ export function loadAgnicConfigFromEnv(
       baseUrl: (env.AGNIC_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
       partnerId: partnerId!,
       accessToken: accessToken!,
-      model: env.AGNIC_MODEL?.trim() || DEFAULT_MODEL,
+      model: normalizeAgnicModel(env.AGNIC_MODEL ?? DEFAULT_MODEL),
+    },
+  };
+}
+
+/** Build config from OAuth cookie token + server env (web proof route). */
+export function buildAgnicConfigFromAccessToken(
+  accessToken: string,
+  env: NodeJS.ProcessEnv = process.env,
+): AgnicCredentialCheck {
+  const missing: string[] = [];
+  const token = accessToken.trim();
+  const partnerId = env.AGNIC_PARTNER_ID?.trim();
+
+  if (!token) {
+    missing.push("agnic_access_token");
+  }
+  if (!partnerId) {
+    missing.push("AGNIC_PARTNER_ID");
+  }
+
+  if (missing.length > 0) {
+    return { ready: false, missing };
+  }
+
+  return {
+    ready: true,
+    missing: [],
+    config: {
+      baseUrl: (env.AGNIC_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
+      partnerId: partnerId!,
+      accessToken: token,
+      model: normalizeAgnicModel(env.AGNIC_MODEL ?? DEFAULT_MODEL),
     },
   };
 }

@@ -1,11 +1,11 @@
 {
   "status": "skipped",
-  "generatedAt": "2026-05-21T04:39:50.387Z",
-  "reason": "Skipped Agnic demo proof. Missing env: AGNIC_ACCESS_TOKEN, AGNIC_PARTNER_ID",
+  "generatedAt": "2026-05-16T00:00:00.000Z",
+  "reason": "Skipped Agnic demo proof. Missing env: AGNIC_ACCESS_TOKEN",
   "env": {
     "baseUrl": "https://api.agnic.ai/v1",
-    "model": "gpt-4o-mini",
-    "partnerIdSet": false,
+    "model": "openai/gpt-4o-mini",
+    "partnerIdSet": true,
     "accessTokenSet": false
   }
 }
