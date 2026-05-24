@@ -16,7 +16,7 @@ import { X402SuitabilitySchema } from "./x402-suitability.js";
 export const MonetizationReportSchema = z.object({
   reportId: z.string().min(1),
   generatedAt: z.string().datetime(),
-  fixtureMode: z.literal(true),
+  fixtureMode: z.boolean(),
   endpoint: EndpointInputSchema,
   summary: z.string().min(1),
   readinessScore: z.number().int().min(0).max(100),

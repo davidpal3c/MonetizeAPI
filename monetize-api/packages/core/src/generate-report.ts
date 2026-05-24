@@ -123,7 +123,7 @@ export function generateMonetizationReport(
   const report: MonetizationReport = {
     reportId,
     generatedAt,
-    fixtureMode: true,
+    fixtureMode: mode === "fixture",
     endpoint,
     summary:
       `${endpoint.method} ${endpoint.path} is a ${endpoint.domain} endpoint for ${endpoint.targetUsers}. ` +

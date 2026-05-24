@@ -296,15 +296,21 @@ export function ReportFlow({
           </p>
           {reportResult.package.files["monetization-report.json"] ? (
             <p style={{ fontSize: "0.875rem", color: "#444" }}>
-              Endpoint:{" "}
               {(() => {
                 try {
                   const parsed = JSON.parse(
                     reportResult.package.files["monetization-report.json"],
-                  ) as { endpoint?: { method?: string; path?: string } };
-                  return parsed.endpoint
+                  ) as {
+                    fixtureMode?: boolean;
+                    endpoint?: { method?: string; path?: string };
+                  };
+                  const endpointLabel = parsed.endpoint
                     ? `${parsed.endpoint.method} ${parsed.endpoint.path}`
                     : "—";
+                  const modeLabel = parsed.fixtureMode
+                    ? "Fixture mode: yes"
+                    : "Fixture mode: no · Live paid report: yes";
+                  return `${modeLabel} · Endpoint: ${endpointLabel}`;
                 } catch {
                   return "—";
                 }
