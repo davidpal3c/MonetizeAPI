@@ -25,8 +25,14 @@ export {
   generateFixtureReportPackage,
   generatePaidReportPackage,
   NarrativeEnhancementError,
+  type LivePaymentProof,
   type PaidReportGenerationResult,
 } from "./agnic/generate-report-flow.js";
+export {
+  AGNIC_SPEND_PROBE_PATHS,
+  probeAgnicSpendVerification,
+  type AgnicSpendVerificationProbe,
+} from "./agnic/spend-verification-probe.js";
 export {
   applyNarrativeEnhancement,
   generateReportNarrativeEnhancement,

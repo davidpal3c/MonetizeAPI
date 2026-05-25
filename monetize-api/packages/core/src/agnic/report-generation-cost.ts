@@ -1,7 +1,6 @@
 /**
- * Fixed MonetizeAPI fee shown before live report generation.
- * This is the Agnic wallet charge for the narrative enrichment call — not the
- * endpoint's suggested x402 price and not live settlement.
+ * Estimated MonetizeAPI fee shown before live report generation.
+ * Not a confirmed Agnic debit unless balance proof shows a matching delta.
  */
 export const MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD = 0.03;
 

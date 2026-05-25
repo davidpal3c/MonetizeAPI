@@ -1,4 +1,4 @@
-/** Client-safe copy of MonetizeAPI live report fee (see core agnic/report-generation-cost.ts). */
+/** Client-safe estimated live report fee (see core agnic/report-generation-cost.ts). */
 
 export const MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD = 0.03;
 

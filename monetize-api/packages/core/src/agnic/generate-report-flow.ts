@@ -13,11 +13,19 @@ import {
   NarrativeEnhancementError,
 } from "./narrative-enhancement.js";
 import { EndpointParseError } from "../parse-endpoint-input.js";
+import {
+  buildLivePaymentProof,
+  captureAgnicBalanceSnapshot,
+  type LivePaymentProof,
+} from "./live-payment-proof.js";
 
 export type PaidReportGenerationResult = {
   package: ReportPackage;
   parseSource: "user_input" | "fixture_fallback";
+  livePaymentProof?: LivePaymentProof;
 };
+
+export type { LivePaymentProof } from "./live-payment-proof.js";
 
 export async function generateFixtureReportPackage(
   rawInput?: string,
@@ -65,6 +73,8 @@ export async function generatePaidReportPackage(params: {
     generatedAt: new Date().toISOString(),
   });
 
+  const balanceBefore = await captureAgnicBalanceSnapshot(params.config);
+
   let narrativeResult;
   try {
     narrativeResult = await generateReportNarrativeEnhancement({
@@ -80,16 +90,28 @@ export async function generatePaidReportPackage(params: {
   }
 
   const report = applyNarrativeEnhancement(baseReport, narrativeResult.enhancement);
+  const pkg = buildReportPackage({
+    report,
+    mode: "live",
+    model: narrativeResult.model,
+    modelInsight: narrativeResult.enhancement.summary,
+    usage: narrativeResult.usage,
+  });
+
+  const balanceAfter = await captureAgnicBalanceSnapshot(params.config);
+  const livePaymentProof = await buildLivePaymentProof({
+    config: params.config,
+    reportId: pkg.reportId,
+    model: narrativeResult.model,
+    usage: narrativeResult.usage,
+    beforeSnapshot: balanceBefore,
+    afterSnapshot: balanceAfter,
+  });
 
   return {
     parseSource: "user_input",
-    package: buildReportPackage({
-      report,
-      mode: "live",
-      model: narrativeResult.model,
-      modelInsight: narrativeResult.enhancement.summary,
-      usage: narrativeResult.usage,
-    }),
+    package: pkg,
+    livePaymentProof,
   };
 }
 

@@ -7,7 +7,7 @@ import {
   formatMonetizeApiReportGenerationFee,
   MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD,
 } from "../../lib/report-generation-cost";
-import type { PaidReportGenerationResult } from "../../lib/agnic-client";
+import type { LivePaymentProof, PaidReportGenerationResult } from "../../lib/agnic-client";
 
 import { AddFundsButton } from "./AddFundsButton";
 
@@ -284,6 +284,12 @@ export function ReportFlow({
 
       setReportResult(data);
       if (mode === "live") {
+        const proof = data.livePaymentProof;
+        if (proof?.balance.after != null) {
+          setBalance(proof.balance.after);
+          setCurrency(proof.balance.currency);
+          setBalanceError(null);
+        }
         await refreshBalanceAfterReport();
       }
     } catch (err) {
@@ -365,10 +371,11 @@ export function ReportFlow({
             color: "#0d47a1",
           }}
         >
-          <strong>Report generation cost:</strong>{" "}
+          <strong>Estimated report generation cost:</strong>{" "}
           {formatMonetizeApiReportGenerationFee(MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD)}{" "}
-          per live report (charged to your Agnic balance for the MonetizeAPI enrichment step).
-          This is not your API&apos;s recommended price and not live x402 settlement.
+          per live report (MonetizeAPI&apos;s estimate for the Agnic narrative enrichment step).
+          This is not your API&apos;s recommended price, not a confirmed Agnic debit, and not live
+          x402 settlement. Balance may not show an immediate per-call delta.
         </p>
       ) : null}
 
@@ -451,7 +458,7 @@ export function ReportFlow({
           <p>
             {reportResult.package.mode === "live" ? (
               <>
-                <strong>Live report</strong> — generated with your Agnic balance.
+                <strong>Live report</strong> — generated with an Agnic-backed model call.
               </>
             ) : (
               <>
@@ -486,6 +493,13 @@ export function ReportFlow({
               <strong>Highlights:</strong> {reportResult.package.modelInsight}
             </p>
           ) : null}
+          {reportResult.livePaymentProof ? (
+            <LivePaymentProofPanel
+              proof={reportResult.livePaymentProof}
+              balanceRefreshWarning={balanceRefreshWarning}
+              loadingBalance={loadingBalance}
+            />
+          ) : null}
           <button type="button" onClick={downloadPackage} style={downloadButtonStyle}>
             Download launch package (.zip)
           </button>
@@ -493,6 +507,99 @@ export function ReportFlow({
       ) : null}
     </section>
   );
+}
+
+function LivePaymentProofPanel({
+  proof,
+  balanceRefreshWarning,
+  loadingBalance,
+}: {
+  proof: LivePaymentProof;
+  balanceRefreshWarning: string | null;
+  loadingBalance: boolean;
+}) {
+  const estimatedLabel = formatMonetizeApiReportGenerationFee(proof.estimatedReportCostUsd);
+  const tokenSummary = formatTokenUsage(proof.agnicModelCall.usage);
+
+  let balanceLine: string;
+  if (proof.balance.before != null && proof.balance.after != null) {
+    const before = `$${proof.balance.before.toFixed(2)}`;
+    const after = `$${proof.balance.after.toFixed(2)}`;
+    if (proof.confirmedDebitUsd != null) {
+      balanceLine = `${before} → ${after} ${proof.balance.currency} (Δ −$${proof.confirmedDebitUsd.toFixed(4)})`;
+    } else if (proof.balance.delta === 0) {
+      balanceLine = `${before} → ${after} ${proof.balance.currency} (no immediate change)`;
+    } else {
+      balanceLine = `${before} → ${after} ${proof.balance.currency}`;
+    }
+  } else if (proof.balance.after != null) {
+    balanceLine = `$${proof.balance.after.toFixed(2)} ${proof.balance.currency} (after only)`;
+  } else if (proof.balance.before != null) {
+    balanceLine = `$${proof.balance.before.toFixed(2)} ${proof.balance.currency} (before only)`;
+  } else {
+    balanceLine = "Unavailable";
+  }
+
+  let costLine: string;
+  if (proof.confirmedDebitUsd != null) {
+    costLine = `Confirmed Agnic debit: $${proof.confirmedDebitUsd.toFixed(4)} USD (estimated ${estimatedLabel}).`;
+  } else {
+    costLine = `Estimated report generation cost: ${estimatedLabel} — not confirmed as an exact Agnic debit.`;
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: "1rem",
+        padding: "0.75rem 1rem",
+        background: "#f5f5f5",
+        borderRadius: "6px",
+        fontSize: "0.875rem",
+        color: "#333",
+      }}
+    >
+      <p style={{ margin: "0 0 0.5rem", fontWeight: 600 }}>Payment &amp; usage proof</p>
+      <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
+        <li>Report generated successfully (ID {proof.reportId}).</li>
+        <li>
+          Agnic-backed paid model call completed — model <code>{proof.agnicModelCall.model}</code>
+          {tokenSummary ? ` (${tokenSummary})` : null}.
+        </li>
+        <li>Launch package built and ready to download.</li>
+        <li>
+          Balance snapshot: {balanceLine}
+          {loadingBalance ? " — refreshing…" : null}
+        </li>
+        <li>{proof.balance.note}</li>
+        <li>{costLine}</li>
+        <li>{proof.spendVerification.summary}</li>
+      </ul>
+      {balanceRefreshWarning ? (
+        <p role="status" style={{ color: "#e65100", margin: "0.75rem 0 0" }}>
+          {balanceRefreshWarning}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function formatTokenUsage(
+  usage?: LivePaymentProof["agnicModelCall"]["usage"],
+): string | null {
+  if (!usage) {
+    return null;
+  }
+  const parts: string[] = [];
+  if (usage.prompt_tokens != null) {
+    parts.push(`${usage.prompt_tokens} prompt`);
+  }
+  if (usage.completion_tokens != null) {
+    parts.push(`${usage.completion_tokens} completion`);
+  }
+  if (usage.total_tokens != null) {
+    parts.push(`${usage.total_tokens} total tokens`);
+  }
+  return parts.length > 0 ? parts.join(", ") : null;
 }
 
 function AuthErrorAlert({ title, detail }: { title: string; detail?: string }) {
