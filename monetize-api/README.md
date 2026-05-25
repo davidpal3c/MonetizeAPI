@@ -33,6 +33,8 @@ Optional: `npx pnpm@9.15.9 dev:web` starts the web app on port 3000 for the Agni
 
 Deployed via Docker on Render. See [`Dockerfile`](Dockerfile) and [`render.yaml`](render.yaml).
 
+Render env: set `AGNIC_REDIRECT_URI` to `https://<your-host>/auth/callback`, `AGNIC_MODEL=qwen/qwen3.5-flash-02-23`, and `AGNIC_PARTNER_ID` to your `partner_…` id (not the OAuth `app_…` client id).
+
 ## Agnic hackathon
 
 Built for **Agnic — Track: Monetize Your AI App**. Agnic powers OAuth sign-in and live model calls; the product contracts and report pipeline are provider-independent. Fixture mode always works without live credentials.
@@ -45,3 +47,7 @@ packages/core      — report generation, artifacts, simulator
 apps/web           — minimal OAuth demo UI
 examples/company-risk-score/
 ```
+
+## License
+
+This project is licensed under the [MIT License](../LICENSE). You may use, modify, and distribute the code with attribution; the copyright notice must remain in copies and derivative works.

@@ -1,6 +1,6 @@
-# Company Risk Score launch checklist
+# Company Risk Score API launch checklist
 
 - [x] **Validate MonetizationReport against schemas** (`validate-schema`)
-- [ ] **Publish MCP tool definition to agent clients** (`publish-mcp-tool`)
-- [~] **Attach simulated x402 payment metadata** (`configure-x402`)
-- [ ] **Review Ceiba policy draft with enforcement deferred** (`draft-ceiba-policy`)
+- [ ] **Publish MCP tool for /company-risk-score** (`publish-mcp-tool`)
+- [~] **Attach simulated x402 metadata for /company-risk-score** (`configure-x402`)
+- [ ] **Review Ceiba policy draft for company-risk-score** (`draft-ceiba-policy`)

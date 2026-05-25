@@ -21,7 +21,7 @@ export const PaidCallSimulationSchema = z.object({
   simulationId: z.string().min(1),
   reportId: z.string().min(1),
   generatedAt: z.string().datetime(),
-  fixtureMode: z.literal(true),
+  fixtureMode: z.boolean(),
   settlementMode: z.literal("simulated"),
   endpointRequest: z.object({
     method: z.string().min(1),

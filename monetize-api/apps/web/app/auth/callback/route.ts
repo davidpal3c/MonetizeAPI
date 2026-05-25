@@ -7,14 +7,27 @@ import {
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+import { TOKEN_COOKIE } from "../../../lib/agnic-cookies";
 
-const TOKEN_COOKIE = "agnic_access_token";
+export const dynamic = "force-dynamic";
 
 function redirectWithError(origin: string, code: string, detail: string): NextResponse {
   const home = new URL("/", origin);
   home.searchParams.set("auth_error", code);
   home.searchParams.set("auth_error_detail", detail);
+  return NextResponse.redirect(home);
+}
+
+function redirectWithTopupResult(
+  origin: string,
+  topup: string,
+  sessionId: string | null,
+): NextResponse {
+  const home = new URL("/", origin);
+  home.searchParams.set("topup", topup);
+  if (sessionId) {
+    home.searchParams.set("session_id", sessionId);
+  }
   return NextResponse.redirect(home);
 }
 
@@ -24,6 +37,11 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const origin = resolvePublicOrigin(request);
+
+  const topup = url.searchParams.get("topup");
+  if (topup === "success" || topup === "cancelled") {
+    return redirectWithTopupResult(origin, topup, url.searchParams.get("session_id"));
+  }
 
   if (!clientId || !clientSecret) {
     return redirectWithError(

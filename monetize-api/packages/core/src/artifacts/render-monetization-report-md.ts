@@ -12,7 +12,10 @@ export function renderMonetizationReportMd(report: MonetizationReport): string {
     "",
     `**Report ID:** ${report.reportId}`,
     `**Generated:** ${report.generatedAt}`,
-    `**Fixture mode:** ${report.fixtureMode ? "yes" : "no"}`,
+    report.fixtureMode
+      ? "**Fixture mode:** yes"
+      : "**Fixture mode:** no",
+    report.fixtureMode ? "" : "**Live paid report:** yes",
     `**Readiness score:** ${report.readinessScore}/100`,
     "",
     "## Summary",
