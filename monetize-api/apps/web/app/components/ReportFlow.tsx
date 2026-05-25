@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { buildReportZipBlob } from "../../lib/build-report-zip";
 import {
@@ -62,6 +62,7 @@ export function ReportFlow({
   const [balanceRefreshWarning, setBalanceRefreshWarning] = useState<string | null>(
     null,
   );
+  const launchPackageRef = useRef<HTMLDivElement>(null);
 
   const restoredFromOAuth = useMemo(
     () => Boolean(initialInput && initialSignedIn),
@@ -198,6 +199,13 @@ export function ReportFlow({
       void fetch("/api/auth/preserve-input", { method: "DELETE" });
     }
   }, [restoredFromOAuth]);
+
+  useEffect(() => {
+    if (!reportResult?.livePaymentProof) {
+      return;
+    }
+    launchPackageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [reportResult?.livePaymentProof, reportResult?.package?.reportId]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -447,6 +455,8 @@ export function ReportFlow({
 
       {reportResult?.package ? (
         <div
+          id="launch-package-ready"
+          ref={launchPackageRef}
           style={{
             marginTop: "1.5rem",
             padding: "1rem",
@@ -455,6 +465,29 @@ export function ReportFlow({
           }}
         >
           <h2 style={{ marginTop: 0 }}>Your launch package is ready</h2>
+          {reportResult.livePaymentProof ? (
+            <LivePaymentProofPanel
+              proof={reportResult.livePaymentProof}
+              balanceRefreshWarning={balanceRefreshWarning}
+              loadingBalance={loadingBalance}
+            />
+          ) : reportResult.package.mode === "live" ? (
+            <p
+              role="status"
+              style={{
+                marginTop: "1rem",
+                padding: "0.75rem 1rem",
+                background: "#fff3e0",
+                borderRadius: "6px",
+                fontSize: "0.875rem",
+                color: "#e65100",
+              }}
+            >
+              Payment and usage proof is unavailable on this deploy. Redeploy from branch{" "}
+              <code>chore/render-docker-web-proof</code> at commit <code>16b5a2a</code> or
+              later, then hard-refresh and generate again.
+            </p>
+          ) : null}
           <p>
             {reportResult.package.mode === "live" ? (
               <>
@@ -492,13 +525,6 @@ export function ReportFlow({
             <p style={{ fontSize: "0.9rem" }}>
               <strong>Highlights:</strong> {reportResult.package.modelInsight}
             </p>
-          ) : null}
-          {reportResult.livePaymentProof ? (
-            <LivePaymentProofPanel
-              proof={reportResult.livePaymentProof}
-              balanceRefreshWarning={balanceRefreshWarning}
-              loadingBalance={loadingBalance}
-            />
           ) : null}
           <button type="button" onClick={downloadPackage} style={downloadButtonStyle}>
             Download launch package (.zip)
@@ -540,22 +566,35 @@ function LivePaymentProofPanel({
     balanceLine = "Unavailable";
   }
 
-  let costLine: string;
-  if (proof.confirmedDebitUsd != null) {
-    costLine = `Confirmed Agnic debit: $${proof.confirmedDebitUsd.toFixed(4)} USD (estimated ${estimatedLabel}).`;
+  const confirmedDebitLine =
+    proof.confirmedDebitUsd != null
+      ? `Confirmed Agnic debit: $${proof.confirmedDebitUsd.toFixed(4)} USD`
+      : "Confirmed Agnic debit: none observed (balance unchanged or not exposed per-call)";
+
+  let balanceRefreshLine: string;
+  if (loadingBalance) {
+    balanceRefreshLine = "Live balance refresh: in progress…";
+  } else if (balanceRefreshWarning) {
+    balanceRefreshLine = "Live balance refresh: failed — see warning below";
   } else {
-    costLine = `Estimated report generation cost: ${estimatedLabel} — not confirmed as an exact Agnic debit.`;
+    balanceRefreshLine = "Live balance refresh: complete";
   }
 
   return (
     <div
+      id="payment-usage-proof"
+      role="status"
+      aria-live="polite"
       style={{
         marginTop: "1rem",
+        marginBottom: "1rem",
         padding: "0.75rem 1rem",
-        background: "#f5f5f5",
+        background: "#e8f5e9",
+        border: "1px solid #81c784",
+        borderLeft: "4px solid #2e7d32",
         borderRadius: "6px",
         fontSize: "0.875rem",
-        color: "#333",
+        color: "#1b5e20",
       }}
     >
       <p style={{ margin: "0 0 0.5rem", fontWeight: 600 }}>Payment &amp; usage proof</p>
@@ -570,8 +609,16 @@ function LivePaymentProofPanel({
           Balance snapshot: {balanceLine}
           {loadingBalance ? " — refreshing…" : null}
         </li>
+        <li>{balanceRefreshLine}</li>
         <li>{proof.balance.note}</li>
-        <li>{costLine}</li>
+        <li>
+          <strong>{confirmedDebitLine}</strong> (estimated report generation cost:{" "}
+          {estimatedLabel})
+        </li>
+        <li>
+          Estimated report generation cost: {estimatedLabel} — not charged unless Agnic
+          confirms a debit above.
+        </li>
         <li>{proof.spendVerification.summary}</li>
       </ul>
       {balanceRefreshWarning ? (
