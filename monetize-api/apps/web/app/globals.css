@@ -45,6 +45,16 @@ body {
   background: var(--color-bg);
 }
 
+.demo-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.demo-shell > .demo-page {
+  flex: 1;
+}
+
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.85em;
@@ -352,6 +362,62 @@ code {
   margin-top: 1.25rem;
 }
 
+.demo-footer {
+  margin-top: auto;
+  padding: 2rem 1rem 2.5rem;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.demo-footer__tagline {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.demo-footer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.8125rem;
+  color: #475569;
+}
+
+.demo-footer__copyright {
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.demo-footer__sep {
+  color: #94a3b8;
+  user-select: none;
+}
+
+.demo-footer__linkedin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a66c2;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.demo-footer__linkedin:hover {
+  color: #004182;
+  transform: translateY(-1px);
+}
+
+.demo-footer__linkedin:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -394,5 +460,14 @@ code {
 
   .demo-download-row .btn {
     width: 100%;
+  }
+
+  .demo-footer__meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .demo-footer__sep {
+    display: none;
   }
 }
