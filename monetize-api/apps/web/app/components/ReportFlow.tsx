@@ -614,7 +614,7 @@ function FlowStatusStrip({
 
   return (
     <div className="demo-status demo-status--signed-in">
-      {inputRestored ? "Signed in — your description was restored. " : "Signed in with Agnic. "}
+      {inputRestored ? "Welcome! You've signed with Agnic " : "Signed in with Agnic. "}
       {topupMessage ? `${topupMessage} ` : null}
       {balanceRefreshWarning ? balanceRefreshWarning : null}
     </div>
