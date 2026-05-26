@@ -11,6 +11,7 @@ import type { LivePaymentProof, PaidReportGenerationResult } from "../../lib/agn
 
 import { AppHeader } from "./AppHeader";
 import { EndpointInputComposer } from "./EndpointInputComposer";
+import { InputFormatGuide } from "./InputFormatGuide";
 
 type ReportFlowProps = {
   initialInput?: string;
@@ -413,6 +414,9 @@ export function ReportFlow({
             </button>
           ) : null}
         </div>
+
+        <hr className="demo-divider" />
+        <InputFormatGuide />
 
         {error ? (
           <div className="demo-alert demo-alert--error" role="alert">

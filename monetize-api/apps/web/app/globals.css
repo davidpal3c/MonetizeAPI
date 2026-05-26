@@ -133,42 +133,52 @@ code {
   margin-top: 0;
 }
 
-.demo-composer {
+.demo-hero {
   width: 100%;
-  max-width: var(--max-page);
+  max-width: var(--max-content);
   margin: 0 auto 1rem;
-  display: grid;
-  grid-template-columns: minmax(9.5rem, 11rem) minmax(16rem, 1fr) minmax(10rem, 12rem);
-  gap: 1rem 1.25rem;
-  align-items: start;
-  text-align: left;
 }
 
-.demo-composer__center {
-  min-width: 0;
-}
-
-.demo-composer__center .demo-input {
-  min-height: 11.5rem;
+.demo-hero .demo-input {
   box-shadow: var(--shadow-md);
 }
 
-.demo-composer__aside {
+.demo-divider {
+  width: 100%;
+  max-width: var(--max-content);
+  margin: 1.75rem auto 1.25rem;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.demo-guide {
+  width: 100%;
+  max-width: var(--max-content);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 2rem;
+  text-align: left;
+}
+
+.demo-guide__instructions,
+.demo-guide__examples {
   font-size: 0.8125rem;
   line-height: 1.55;
   color: var(--color-muted);
 }
 
-.demo-composer__aside p {
+.demo-guide__instructions p,
+.demo-guide__examples p {
   margin: 0;
 }
 
-.demo-composer__aside strong {
+.demo-guide__instructions strong {
   color: #475569;
   font-weight: 600;
 }
 
-.demo-composer__heading {
+.demo-guide__heading {
   margin: 0 0 0.5rem;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -177,21 +187,21 @@ code {
   color: #94a3b8;
 }
 
-.demo-composer__hint {
+.demo-guide__hint {
   margin-top: 0.75rem;
   font-size: 0.75rem;
   color: #94a3b8;
 }
 
-.demo-composer__example {
+.demo-guide__example {
   margin-bottom: 1rem;
 }
 
-.demo-composer__example:last-child {
+.demo-guide__example:last-child {
   margin-bottom: 0;
 }
 
-.demo-composer__example-label {
+.demo-guide__example-label {
   margin: 0 0 0.35rem;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -200,14 +210,13 @@ code {
   color: #94a3b8;
 }
 
-.demo-composer__example-body {
-  margin: 0;
+.demo-guide__example-body {
   font-size: 0.75rem;
   line-height: 1.5;
   color: #94a3b8;
 }
 
-.demo-composer__example-pre {
+.demo-guide__example-pre {
   margin: 0;
   padding: 0.5rem 0.65rem;
   font-family: var(--font-sans);
@@ -528,14 +537,12 @@ code {
   border: 0;
 }
 
-@media (max-width: 900px) {
-  .demo-composer {
-    grid-template-columns: 1fr;
-    max-width: var(--max-content);
-  }
-}
-
 @media (max-width: 640px) {
+  .demo-guide {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
   .demo-page {
     padding: 0 0.875rem 2rem;
   }
