@@ -10,9 +10,9 @@ import {
 import type { LivePaymentProof, PaidReportGenerationResult } from "../../lib/agnic-client";
 
 import { AppHeader } from "./AppHeader";
+import { EndpointInputComposer } from "./EndpointInputComposer";
 
 type ReportFlowProps = {
-  defaultInput: string;
   initialInput?: string;
   initialSignedIn: boolean;
   initialBalance?: number | null;
@@ -36,7 +36,6 @@ type BalanceResponse = {
 };
 
 export function ReportFlow({
-  defaultInput,
   initialInput = "",
   initialSignedIn,
   initialBalance = null,
@@ -45,7 +44,7 @@ export function ReportFlow({
   authError,
   authErrorDetail,
 }: ReportFlowProps) {
-  const [input, setInput] = useState(initialInput || defaultInput);
+  const [input, setInput] = useState(initialInput);
   const [signedIn, setSignedIn] = useState(initialSignedIn);
   const [clientId, setClientId] = useState<string | null>(null);
   const [topupReturnUrl, setTopupReturnUrl] = useState<string | null>(null);
@@ -355,19 +354,11 @@ export function ReportFlow({
           report.
         </p>
 
-        <div className="demo-hero">
-          <label htmlFor="endpoint-input" className="visually-hidden">
-            API or endpoint description
-          </label>
-          <textarea
-            id="endpoint-input"
-            className="demo-input"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            rows={8}
-            placeholder="Describe an API endpoint, tool, or function you want to monetize..."
-          />
-        </div>
+        <EndpointInputComposer
+          value={input}
+          onChange={setInput}
+          disabled={generating}
+        />
 
         {signedIn ? (
           <FlowStatusStrip

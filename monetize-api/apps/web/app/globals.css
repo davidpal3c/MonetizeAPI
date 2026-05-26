@@ -22,7 +22,7 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
   --max-content: 40rem;
-  --max-page: 52rem;
+  --max-page: 56rem;
 }
 
 *,
@@ -133,10 +133,92 @@ code {
   margin-top: 0;
 }
 
-.demo-hero {
+.demo-composer {
   width: 100%;
-  max-width: var(--max-content);
+  max-width: var(--max-page);
   margin: 0 auto 1rem;
+  display: grid;
+  grid-template-columns: minmax(9.5rem, 11rem) minmax(16rem, 1fr) minmax(10rem, 12rem);
+  gap: 1rem 1.25rem;
+  align-items: start;
+  text-align: left;
+}
+
+.demo-composer__center {
+  min-width: 0;
+}
+
+.demo-composer__center .demo-input {
+  min-height: 11.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.demo-composer__aside {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.demo-composer__aside p {
+  margin: 0;
+}
+
+.demo-composer__aside strong {
+  color: #475569;
+  font-weight: 600;
+}
+
+.demo-composer__heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.demo-composer__hint {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.demo-composer__example {
+  margin-bottom: 1rem;
+}
+
+.demo-composer__example:last-child {
+  margin-bottom: 0;
+}
+
+.demo-composer__example-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.demo-composer__example-body {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.demo-composer__example-pre {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .demo-input {
@@ -444,6 +526,13 @@ code {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media (max-width: 900px) {
+  .demo-composer {
+    grid-template-columns: 1fr;
+    max-width: var(--max-content);
+  }
 }
 
 @media (max-width: 640px) {

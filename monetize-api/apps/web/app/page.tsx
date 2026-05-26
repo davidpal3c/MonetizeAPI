@@ -1,4 +1,4 @@
-import { fetchAgnicBalance, getDefaultCompanyRiskScoreInput } from "@monetize-api/core";
+import { fetchAgnicBalance } from "@monetize-api/core";
 import { cookies } from "next/headers";
 
 import { ReportFlow } from "./components/ReportFlow";
@@ -30,8 +30,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const accessToken = cookieStore.get(TOKEN_COOKIE)?.value?.trim();
   const hasToken = Boolean(accessToken);
   const pendingInput = decodePendingInput(cookieStore.get(PENDING_INPUT_COOKIE)?.value);
-  const defaultInput = getDefaultCompanyRiskScoreInput();
-
   let initialBalance: number | null = null;
   let initialBalanceError: string | null = null;
   let initialCurrency = "USD";
@@ -52,7 +50,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <div className="demo-page">
       <ReportFlow
-        defaultInput={defaultInput}
         initialInput={pendingInput}
         initialSignedIn={hasToken}
         initialBalance={initialBalance}
