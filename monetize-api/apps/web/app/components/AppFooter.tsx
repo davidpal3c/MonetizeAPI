@@ -1,4 +1,5 @@
 const LINKEDIN_URL = "https://www.linkedin.com/in/david-palacios-9077a2223/";
+const AGNIC_URL = "https://agnic.ai";
 
 function LinkedInIcon() {
   return (
@@ -24,6 +25,15 @@ export function AppFooter() {
         MonetizeAPI — turn any API idea into a paid, agent-ready launch package.
       </p>
       <div className="demo-footer__meta">
+        <span>
+          Powered by{" "}
+          <a className="demo-footer__agnic" href={AGNIC_URL} target="_blank" rel="noopener noreferrer">
+            Agnic
+          </a>
+        </span>
+        <span className="demo-footer__sep" aria-hidden="true">
+          ·
+        </span>
         <span className="demo-footer__copyright">© {year} MonetizeAPI</span>
         <span className="demo-footer__sep" aria-hidden="true">
           ·

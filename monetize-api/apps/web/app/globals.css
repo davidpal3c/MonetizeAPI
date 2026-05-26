@@ -399,6 +399,22 @@ code {
   user-select: none;
 }
 
+.demo-footer__agnic {
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.demo-footer__agnic:hover {
+  color: var(--color-primary);
+}
+
+.demo-footer__agnic:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .demo-footer__linkedin {
   display: inline-flex;
   align-items: center;
