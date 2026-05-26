@@ -1,4 +1,13 @@
+import { Plus_Jakarta_Sans } from "next/font/google";
 import type { ReactNode } from "react";
+
+import "./globals.css";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
 
 export const metadata = {
   title: "MonetizeAPI",
@@ -7,10 +16,8 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body style={{ fontFamily: "system-ui, sans-serif", margin: "2rem" }}>
-        {children}
-      </body>
+    <html lang="en" className={plusJakarta.variable}>
+      <body>{children}</body>
     </html>
   );
 }

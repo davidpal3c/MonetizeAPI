@@ -15,13 +15,16 @@ type AddFundsButtonProps = {
   currency?: string;
   onBalanceRefresh: () => void;
   disabled?: boolean;
+  label?: string;
+  className?: string;
+  showBalance?: boolean;
 };
 
 function formatBalance(balance: number | null | undefined, currency = "USD"): string {
   if (balance == null || Number.isNaN(balance)) {
     return "";
   }
-  return `($${balance.toFixed(2)} ${currency})`;
+  return ` ($${balance.toFixed(2)} ${currency})`;
 }
 
 export function AddFundsButton({
@@ -31,6 +34,9 @@ export function AddFundsButton({
   currency = "USD",
   onBalanceRefresh,
   disabled = false,
+  label = "Add Funds",
+  className = "btn btn--secondary",
+  showBalance = false,
 }: AddFundsButtonProps) {
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -65,29 +71,24 @@ export function AddFundsButton({
   }, [clientId, topupReturnUrl]);
 
   const isDisabled = disabled || !clientId || !topupReturnUrl;
+  const balanceSuffix = showBalance ? formatBalance(balance, currency) : "";
 
   return (
     <button
       type="button"
       onClick={openTopup}
       disabled={isDisabled}
+      className={className}
       title={
         !topupReturnUrl
-          ? "Top-up return URL is not configured"
+          ? "Top-up is not available right now"
           : !clientId
-            ? "Agnic client ID is not configured"
+            ? "Sign in is required for top-up"
             : undefined
       }
-      style={{
-        padding: "0.5rem 1rem",
-        borderRadius: "6px",
-        border: "1px solid #1565c0",
-        background: "#1976d2",
-        color: "#fff",
-        cursor: isDisabled ? "not-allowed" : "pointer",
-      }}
     >
-      Add Funds {formatBalance(balance, currency)}
+      {label}
+      {balanceSuffix}
     </button>
   );
 }

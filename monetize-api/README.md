@@ -25,7 +25,7 @@ npx pnpm@9.15.9 generate:fixture
 
 Outputs are written to `examples/company-risk-score/`. The canonical input fixture is `examples/company-risk-score/input.txt`.
 
-Optional: `npx pnpm@9.15.9 dev:web` starts the web app on port 3000 for the Agnic sign-in demo.
+Optional: `npx pnpm@9.15.9 dev:web` starts the web demo UI on port 3000 (Plus Jakarta Sans, centered report flow, Agnic sign-in).
 
 ## Live demo
 

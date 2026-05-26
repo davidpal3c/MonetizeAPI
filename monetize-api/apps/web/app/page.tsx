@@ -50,10 +50,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   return (
-    <main style={{ maxWidth: "52rem", margin: "0 auto", padding: "1.5rem" }}>
-      <h1>MonetizeAPI</h1>
-      <p>Turn any API idea into a paid, agent-ready launch package in minutes.</p>
-
+    <div className="demo-page">
       <ReportFlow
         defaultInput={defaultInput}
         initialInput={pendingInput}
@@ -64,6 +61,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         authError={params.auth_error}
         authErrorDetail={params.auth_error_detail}
       />
-    </main>
+    </div>
   );
 }

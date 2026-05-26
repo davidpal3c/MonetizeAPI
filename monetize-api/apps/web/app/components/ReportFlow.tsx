@@ -9,7 +9,7 @@ import {
 } from "../../lib/report-generation-cost";
 import type { LivePaymentProof, PaidReportGenerationResult } from "../../lib/agnic-client";
 
-import { AddFundsButton } from "./AddFundsButton";
+import { AppHeader } from "./AppHeader";
 
 type ReportFlowProps = {
   defaultInput: string;
@@ -321,217 +321,176 @@ export function ReportFlow({
     URL.revokeObjectURL(url);
   };
 
+  const signIn = () => {
+    void signInForReport();
+  };
+
   return (
-    <section style={{ marginTop: "1.5rem" }}>
-      {authError ? (
-        <AuthErrorAlert
-          title="We couldn't complete sign-in"
-          detail={authErrorDetail ?? authError}
-        />
-      ) : null}
-
-      <p style={{ fontSize: "0.95rem", color: "#333" }}>
-        Describe your API in plain language or paste a structured spec. New Agnic accounts
-        include <strong>$5 starter credit</strong> for your first live report.
-      </p>
-
-      <label htmlFor="endpoint-input" style={{ display: "block", fontWeight: 600 }}>
-        Your API or endpoint
-      </label>
-      <textarea
-        id="endpoint-input"
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-        rows={10}
-        style={{
-          width: "100%",
-          maxWidth: "48rem",
-          marginTop: "0.5rem",
-          fontFamily: "monospace",
-          fontSize: "0.875rem",
-        }}
+    <>
+      <AppHeader
+        signedIn={signedIn}
+        balance={balance}
+        balanceError={balanceError}
+        currency={currency}
+        loadingBalance={loadingBalance}
+        generating={generating}
+        clientId={clientId}
+        topupReturnUrl={topupReturnUrl}
+        onSignIn={signIn}
+        onSignOut={() => void signOut()}
+        onBalanceRefresh={() => void refreshBalance()}
       />
 
-      {!signedIn ? (
-        <p style={{ marginTop: "1rem" }}>
-          Sign in with Agnic to generate a live, paid monetization report.
-        </p>
-      ) : (
-        <SignedInStatus
-          balance={balance}
-          balanceError={balanceError}
-          currency={currency}
-          loadingBalance={loadingBalance}
-          inputRestored={restoredFromOAuth}
-          topupMessage={topupMessage}
-          balanceRefreshWarning={balanceRefreshWarning}
-        />
-      )}
-
-      {signedIn ? (
-        <p
-          style={{
-            marginTop: "1rem",
-            padding: "0.75rem 1rem",
-            background: "#e3f2fd",
-            borderRadius: "6px",
-            fontSize: "0.9rem",
-            color: "#0d47a1",
-          }}
-        >
-          <strong>Estimated report generation cost:</strong>{" "}
-          {formatMonetizeApiReportGenerationFee(MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD)}{" "}
-          per live report (MonetizeAPI&apos;s estimate for the Agnic narrative enrichment step).
-          This is not your API&apos;s recommended price, not a confirmed Agnic debit, and not live
-          x402 settlement. Balance may not show an immediate per-call delta.
-        </p>
-      ) : null}
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem" }}>
-        <button
-          type="button"
-          onClick={() => void generateReport("live")}
-          disabled={generating}
-          style={primaryButtonStyle}
-        >
-          {generating ? "Generating…" : signedIn ? "Generate live report" : "Sign in & generate report"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void generateReport("fixture")}
-          disabled={generating}
-          style={secondaryButtonStyle}
-        >
-          Try sample report (free)
-        </button>
-        {parseFailed ? (
-          <button
-            type="button"
-            onClick={() => void generateReport("fixture", { useCanonicalFixture: true })}
-            disabled={generating}
-            style={secondaryButtonStyle}
-          >
-            Use sample company-risk API
-          </button>
-        ) : null}
-        {!signedIn ? (
-          <button
-            type="button"
-            onClick={() => void signInForReport()}
-            disabled={generating}
-            style={secondaryButtonStyle}
-          >
-            Sign in with Agnic
-          </button>
-        ) : null}
-        {signedIn ? (
-          <AddFundsButton
-            clientId={clientId}
-            topupReturnUrl={topupReturnUrl}
-            balance={balance}
-            currency={currency}
-            onBalanceRefresh={() => void refreshBalance()}
-            disabled={!clientId}
+      <section className="demo-main">
+        {authError ? (
+          <AuthErrorAlert
+            title="We couldn't complete sign-in"
+            detail={authErrorDetail ?? authError}
           />
         ) : null}
+
+        <h1 className="demo-tagline">From endpoint to paid agent-ready tool.</h1>
+        <p className="demo-subline">
+          New Agnic accounts include <strong>$5 starter credit</strong> for your first live
+          report.
+        </p>
+
+        <div className="demo-hero">
+          <label htmlFor="endpoint-input" className="visually-hidden">
+            API or endpoint description
+          </label>
+          <textarea
+            id="endpoint-input"
+            className="demo-input"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            rows={8}
+            placeholder="Describe an API endpoint, tool, or function you want to monetize..."
+          />
+        </div>
+
         {signedIn ? (
+          <FlowStatusStrip
+            inputRestored={restoredFromOAuth}
+            topupMessage={topupMessage}
+            balanceRefreshWarning={balanceRefreshWarning}
+          />
+        ) : (
+          <p className="demo-subline demo-subline--tight">
+            Sign in with Agnic to generate a live monetization report.
+          </p>
+        )}
+
+        {signedIn ? (
+          <div className="demo-callout">
+            <strong>Estimated report generation cost:</strong>{" "}
+            {formatMonetizeApiReportGenerationFee(MONETIZEAPI_LIVE_REPORT_GENERATION_FEE_USD)}{" "}
+            per live report. This is MonetizeAPI&apos;s estimate for the Agnic enrichment step—not
+            your API price, not a confirmed debit, and not live x402 settlement.
+          </div>
+        ) : null}
+
+        <div className="demo-actions">
           <button
             type="button"
-            onClick={() => void signOut()}
+            className="btn btn--primary"
+            onClick={() => void generateReport("live")}
             disabled={generating}
-            style={secondaryButtonStyle}
           >
-            Log out
+            {generating
+              ? "Generating…"
+              : signedIn
+                ? "Generate Report"
+                : "Sign in & Generate Report"}
           </button>
-        ) : null}
-      </div>
-
-      {error ? (
-        <p role="alert" style={{ color: "#b71c1c", marginTop: "1rem" }}>
-          {error}
-          {needsFunds ? " Use Add Funds to top up your Agnic balance." : null}
-        </p>
-      ) : null}
-
-      {reportResult?.package ? (
-        <div
-          id="launch-package-ready"
-          ref={launchPackageRef}
-          style={{
-            marginTop: "1.5rem",
-            padding: "1rem",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>Your launch package is ready</h2>
-          {reportResult.livePaymentProof ? (
-            <LivePaymentProofPanel
-              proof={reportResult.livePaymentProof}
-              balanceRefreshWarning={balanceRefreshWarning}
-              loadingBalance={loadingBalance}
-            />
-          ) : reportResult.package.mode === "live" ? (
-            <p
-              role="status"
-              style={{
-                marginTop: "1rem",
-                padding: "0.75rem 1rem",
-                background: "#fff3e0",
-                borderRadius: "6px",
-                fontSize: "0.875rem",
-                color: "#e65100",
-              }}
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={() => void generateReport("fixture")}
+            disabled={generating}
+          >
+            Try sample (free)
+          </button>
+          {parseFailed ? (
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => void generateReport("fixture", { useCanonicalFixture: true })}
+              disabled={generating}
             >
-              Payment and usage proof is unavailable on this deploy. Redeploy from branch{" "}
-              <code>chore/render-docker-web-proof</code> at commit <code>16b5a2a</code> or
-              later, then hard-refresh and generate again.
-            </p>
+              Use sample API
+            </button>
           ) : null}
-          <p>
-            {reportResult.package.mode === "live" ? (
-              <>
-                <strong>Live report</strong> — generated with an Agnic-backed model call.
-              </>
-            ) : (
-              <>
-                <strong>Sample report</strong>
-                {reportResult.parseSource === "fixture_fallback"
-                  ? " — built from our company-risk example."
-                  : " — no Agnic charge."}
-              </>
-            )}
-          </p>
-          {reportResult.package.files["monetization-report.json"] ? (
-            <p style={{ fontSize: "0.875rem", color: "#444" }}>
-              {(() => {
-                try {
-                  const parsed = JSON.parse(
-                    reportResult.package.files["monetization-report.json"],
-                  ) as {
-                    endpoint?: { method?: string; path?: string };
-                  };
-                  const endpointLabel = parsed.endpoint
-                    ? `${parsed.endpoint.method} ${parsed.endpoint.path}`
-                    : null;
-                  return endpointLabel ? `Endpoint: ${endpointLabel}` : null;
-                } catch {
-                  return null;
-                }
-              })()}
-            </p>
-          ) : null}
-          {reportResult.package.modelInsight ? (
-            <p style={{ fontSize: "0.9rem" }}>
-              <strong>Highlights:</strong> {reportResult.package.modelInsight}
-            </p>
-          ) : null}
-          <button type="button" onClick={downloadPackage} style={downloadButtonStyle}>
-            Download launch package (.zip)
-          </button>
         </div>
-      ) : null}
-    </section>
+
+        {error ? (
+          <div className="demo-alert demo-alert--error" role="alert">
+            {error}
+            {needsFunds ? " Add Funds in the header to top up your Agnic balance." : null}
+          </div>
+        ) : null}
+
+        {reportResult?.package ? (
+          <div id="launch-package-ready" ref={launchPackageRef} className="demo-results">
+            <h2 className="demo-results__title">Your launch package is ready</h2>
+            {reportResult.livePaymentProof ? (
+              <LivePaymentProofPanel
+                proof={reportResult.livePaymentProof}
+                balanceRefreshWarning={balanceRefreshWarning}
+                loadingBalance={loadingBalance}
+              />
+            ) : reportResult.package.mode === "live" ? (
+              <div className="demo-alert demo-alert--warning" role="status">
+                Payment proof is unavailable. Refresh the page and generate again.
+              </div>
+            ) : null}
+            <p className="demo-results__meta">
+              {reportResult.package.mode === "live" ? (
+                <>
+                  <strong>Live report</strong> — Agnic-backed model enrichment applied.
+                </>
+              ) : (
+                <>
+                  <strong>Sample report</strong>
+                  {reportResult.parseSource === "fixture_fallback"
+                    ? " — company-risk example."
+                    : " — no Agnic charge."}
+                </>
+              )}
+            </p>
+            {reportResult.package.files["monetization-report.json"] ? (
+              <p className="demo-results__meta">
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(
+                      reportResult.package.files["monetization-report.json"],
+                    ) as {
+                      endpoint?: { method?: string; path?: string };
+                    };
+                    const endpointLabel = parsed.endpoint
+                      ? `${parsed.endpoint.method} ${parsed.endpoint.path}`
+                      : null;
+                    return endpointLabel ? `Endpoint: ${endpointLabel}` : null;
+                  } catch {
+                    return null;
+                  }
+                })()}
+              </p>
+            ) : null}
+            {reportResult.package.modelInsight ? (
+              <p className="demo-results__highlights">
+                <strong>Highlights:</strong> {reportResult.package.modelInsight}
+              </p>
+            ) : null}
+            <div className="demo-download-row">
+              <button type="button" className="btn btn--success" onClick={downloadPackage}>
+                Download ZIP
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+    </>
   );
 }
 
@@ -580,49 +539,29 @@ function LivePaymentProofPanel({
     balanceRefreshLine = "Live balance refresh: complete";
   }
 
+  const costSummary =
+    proof.confirmedDebitUsd != null
+      ? `Confirmed debit ${confirmedDebitLine.replace("Confirmed Agnic debit: ", "")}. Estimated ${estimatedLabel}.`
+      : `${confirmedDebitLine}. Estimated ${estimatedLabel} — not charged unless Agnic confirms a debit.`;
+
   return (
-    <div
-      id="payment-usage-proof"
-      role="status"
-      aria-live="polite"
-      style={{
-        marginTop: "1rem",
-        marginBottom: "1rem",
-        padding: "0.75rem 1rem",
-        background: "#e8f5e9",
-        border: "1px solid #81c784",
-        borderLeft: "4px solid #2e7d32",
-        borderRadius: "6px",
-        fontSize: "0.875rem",
-        color: "#1b5e20",
-      }}
-    >
-      <p style={{ margin: "0 0 0.5rem", fontWeight: 600 }}>Payment &amp; usage proof</p>
-      <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
-        <li>Report generated successfully (ID {proof.reportId}).</li>
+    <div id="payment-usage-proof" className="demo-proof" role="status" aria-live="polite">
+      <p className="demo-proof__title">Payment &amp; usage proof</p>
+      <ul>
+        <li>Report ready — {proof.reportId}</li>
         <li>
-          Agnic-backed paid model call completed — model <code>{proof.agnicModelCall.model}</code>
-          {tokenSummary ? ` (${tokenSummary})` : null}.
+          Agnic model call completed (<code>{proof.agnicModelCall.model}</code>
+          {tokenSummary ? `, ${tokenSummary}` : ""})
         </li>
-        <li>Launch package built and ready to download.</li>
         <li>
-          Balance snapshot: {balanceLine}
-          {loadingBalance ? " — refreshing…" : null}
+          Balance: {balanceLine}
+          {loadingBalance ? " (refreshing…)" : ""} — {balanceRefreshLine.toLowerCase()}
         </li>
-        <li>{balanceRefreshLine}</li>
         <li>{proof.balance.note}</li>
-        <li>
-          <strong>{confirmedDebitLine}</strong> (estimated report generation cost:{" "}
-          {estimatedLabel})
-        </li>
-        <li>
-          Estimated report generation cost: {estimatedLabel} — not charged unless Agnic
-          confirms a debit above.
-        </li>
-        <li>{proof.spendVerification.summary}</li>
+        <li>{costSummary}</li>
       </ul>
       {balanceRefreshWarning ? (
-        <p role="status" style={{ color: "#e65100", margin: "0.75rem 0 0" }}>
+        <p className="demo-alert demo-alert--warning" role="status" style={{ marginTop: "0.75rem" }}>
           {balanceRefreshWarning}
         </p>
       ) : null}
@@ -651,93 +590,33 @@ function formatTokenUsage(
 
 function AuthErrorAlert({ title, detail }: { title: string; detail?: string }) {
   return (
-    <div
-      role="alert"
-      style={{
-        marginBottom: "1rem",
-        padding: "0.75rem 1rem",
-        border: "1px solid #c62828",
-        borderRadius: "6px",
-        background: "#ffebee",
-        color: "#b71c1c",
-      }}
-    >
+    <div className="demo-alert demo-alert--error" role="alert">
       <strong>{title}</strong>
       {detail ? <p style={{ margin: "0.5rem 0 0" }}>{detail}</p> : null}
     </div>
   );
 }
 
-function SignedInStatus({
-  balance,
-  balanceError,
-  currency,
-  loadingBalance,
+function FlowStatusStrip({
   inputRestored,
   topupMessage,
   balanceRefreshWarning,
 }: {
-  balance: number | null;
-  balanceError: string | null;
-  currency: string;
-  loadingBalance: boolean;
   inputRestored: boolean;
   topupMessage: string | null;
   balanceRefreshWarning: string | null;
 }) {
-  let balanceLabel: string;
-  if (loadingBalance) {
-    balanceLabel = "Loading…";
-  } else if (balance != null) {
-    balanceLabel = `$${balance.toFixed(2)} ${currency}`;
-  } else if (balanceError) {
-    balanceLabel = `Unable to load balance (${balanceError})`;
-  } else {
-    balanceLabel = "Unable to load balance";
+  if (!inputRestored && !topupMessage && !balanceRefreshWarning) {
+    return (
+      <div className="demo-status demo-status--signed-in">Signed in with Agnic</div>
+    );
   }
 
   return (
-    <div style={{ marginTop: "1rem" }}>
-      <p style={{ color: "#1b5e20", fontWeight: 600 }}>
-        Signed in with Agnic
-        {inputRestored ? " — we kept your API description." : null}
-      </p>
-      <p>Balance: {balanceLabel}</p>
-      {topupMessage ? (
-        <p style={{ color: "#1b5e20", fontSize: "0.9rem" }}>{topupMessage}</p>
-      ) : null}
-      {balanceRefreshWarning ? (
-        <p role="status" style={{ color: "#e65100", fontSize: "0.9rem" }}>
-          {balanceRefreshWarning}
-        </p>
-      ) : null}
+    <div className="demo-status demo-status--signed-in">
+      {inputRestored ? "Signed in — your description was restored. " : "Signed in with Agnic. "}
+      {topupMessage ? `${topupMessage} ` : null}
+      {balanceRefreshWarning ? balanceRefreshWarning : null}
     </div>
   );
 }
-
-const primaryButtonStyle: React.CSSProperties = {
-  padding: "0.5rem 1rem",
-  borderRadius: "6px",
-  border: "1px solid #1565c0",
-  background: "#1976d2",
-  color: "#fff",
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: "0.5rem 1rem",
-  borderRadius: "6px",
-  border: "1px solid #757575",
-  background: "#fff",
-  color: "#333",
-  cursor: "pointer",
-};
-
-const downloadButtonStyle: React.CSSProperties = {
-  padding: "0.5rem 1rem",
-  borderRadius: "6px",
-  border: "1px solid #2e7d32",
-  background: "#388e3c",
-  color: "#fff",
-  cursor: "pointer",
-};
