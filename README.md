@@ -2,6 +2,8 @@
 
 **From endpoint to paid agent-ready tool.**
 
+[Demo](https://monetizeapi.onrender.com)
+
 MonetizeAPI turns an API endpoint, spec, or function idea into a launch package for a paid agent-callable tool.
 
 It generates:
